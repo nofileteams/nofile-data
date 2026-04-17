@@ -16,7 +16,7 @@ path = r"C:\Program Files\nofile-client"
 if os.path.exists(path):
     send2trash(path)
 
-u = "https://nofileteams-coder.github.io/nofile-data/r47-tool.zip"
+u = "https://nofileteams.github.io/nofile-data/r47-tool.zip"
 p = os.path.dirname(os.path.abspath(__file__))
 f = os.path.join(p, "index.zip")
 urllib.request.urlretrieve(u, f)
