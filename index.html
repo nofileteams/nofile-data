@@ -1,18 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>NOFILE</title>
-  <link rel="icon" href="icon.png">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      height: 100%;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOFILE</title>
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+body{
+    margin:0;
+    background:#000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial,sans-serif;
+}
+button{
+    background:#000;
+    color:#fff;
+    border:2px solid #00aaff;
+    border-radius:14px;
+    padding:16px 40px;
+    font-size:22px;
+    cursor:pointer;
+    box-shadow:
+        0 0 5px #00aaff,
+        0 0 10px #00aaff,
+        0 0 20px #00aaff,
+        0 0 40px #00aaff;
+    transition:.2s;
+}
+button:hover{
+    box-shadow:
+        0 0 10px #33bbff,
+        0 0 20px #33bbff,
+        0 0 40px #33bbff,
+        0 0 80px #33bbff;
+    transform:scale(1.05);
+}
+button:active{
+    transform:scale(0.97);
+}
+</style>
 </head>
 <body>
+
+<button id="download">Download</button>
+
+<script>
+document.getElementById("download").onclick=function(){
+    const a=document.createElement("a");
+    a.href="mm.ogg";
+    a.download="mm.ogg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+};
+</script>
+
 </body>
 </html>
