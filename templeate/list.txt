@@ -1,3 +1,4 @@
+plastice
 dirt
 grass
 stone
