@@ -1,6 +1,6 @@
 #Qt5 import templeate
 import sys
 from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QPixmap
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QIcon
