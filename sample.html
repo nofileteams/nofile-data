@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>WebChannel Test</title>
+    <!-- PyQt5が内部で提供するqwebchannel.jsを読み込む -->
+    <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // QWebChannelの初期化
+            new QWebChannel(qt.webChannelTransport, function (channel) {
+                // Python側で登録した "pyObj" にアクセス可能にする
+                window.pyObj = channel.objects.pyObj;
+            });
+        });
+
+        // ボタンが押されたらPython側にメッセージを送る関数
+        function sendMessage() {
+            if (window.pyObj) {
+                // Python側のreceiveMessageメソッド（スロット）を呼び出す
+                window.pyObj.receiveMessage("hello world");
+            } else {
+                console.error("WebChannelが初期化されていません。");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>PyQt5 WebChannel サンプル</h1>
+    <button onclick="sendMessage()">親ウィンドウに「hello world」を送る</button>
+</body>
+</html>
