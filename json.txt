@@ -1,0 +1,29 @@
+import json
+import time
+
+start = "[]"
+data = json.loads(start)
+print(data)
+
+add = {
+	"test": "aaa",
+	"test2": "bbb"
+}
+
+data.append(add.copy())
+data.append(add.copy())
+print(data)
+del data[1]["test"]
+data[0]["test2"] = "bbbb"
+print(data)
+while True:
+	q = input("continue? y/n:")
+	if q == "y" or q == "Y":
+		data.pop(1)
+		print(data)
+		break
+	if q == "n" or q == "N":
+		print("exit")
+		break
+	if q == "":
+		print("PLS TYPE Y OR N!!!!!!!!!!")
