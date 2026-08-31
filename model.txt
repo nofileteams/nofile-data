@@ -1,0 +1,2 @@
+#best ai model
+sorc/qwen3.5-uncensored:2b 
