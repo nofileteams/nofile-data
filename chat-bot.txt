@@ -1,0 +1,113 @@
+import os
+import json
+import copy
+import time
+import random
+from pathlib import Path
+text = "Hello, how are you"
+learn_mode = False
+file = "index.json"
+file2 = "index2.json"
+
+def check():
+	global file
+	global texts
+	texts = Path(file).read_text(encoding="UTF-8")
+	print(texts)
+
+#Path(file).open("w", encoding="UTF-8").write("[]")
+
+with open(file, "r", encoding="UTF-8") as json_file:
+	data = json.load(json_file)
+with open(file2, "r", encoding="UTF-8") as json_file:
+	data2 = json.load(json_file)
+
+
+if learn_mode == True:
+	learn = text.split()
+	learn_count = len(learn)
+	count = 0
+	count2 = len(data) + 1
+	print(count)
+	
+	time.sleep(0)
+	
+	for _ in range(learn_count - 1):
+		add = {
+			count2: {
+				"text": learn[count],
+				"next": count2 + 1
+			}
+			
+		}
+		data.append(copy.deepcopy(add))
+		count = count + 1
+		count2 = count2 + 1
+	
+	add = {
+		count2: {
+			"text": learn[count],
+			"next": "end"
+		}	
+	}
+	data.append(copy.deepcopy(add))
+	
+
+	print(data)
+	
+	with open(file, "w", encoding="UTF-8") as write:
+		json.dump(data, write, ensure_ascii=False, indent=2)
+
+	check()
+
+if learn_mode == False:
+	load = text.split()
+	load_count = len(data2)
+	load_count2 = len(load)
+	count = 0
+	count2 = 0
+	count3 = len(data)
+	lists = ""
+	for _ in range(load_count):
+		count = 0
+		for _ in range(load_count2):
+			entry = load[count]
+			if list(data2.keys())[count2] in entry:
+				lists = f"{lists}{data2[list(data2.keys())[count2]]} "
+			count = count + 1
+		count2 = count2 + 1
+	
+	count4 = lists.split()
+	count5 = len(count4)
+	count6 = random.randint(0, count5 - 1)
+	count7 = count4[count6]
+	print(count7)
+	print(data)
+	print(data[int(count7) - 1][count7]["text"])
+	list2 = ""
+	while True:
+		print(count7)
+		print(list2)
+		list2 = f"{list2}{data[int(count7) - 1][count7]["text"]} "
+		if data[int(count7) - 1][count7]["next"] == "end":
+			break
+		count7 = data[int(count7) - 1][count7]["next"]
+	print(list2)
+		
+	
+	
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
