@@ -1,0 +1,464 @@
+はい。PyQt5 → PyQt6 では、特に Qt の enum 周りが大きく変わっています。
+提示された import 構成なら、まず以下を押さえると移植しやすいです。
+1. setWindowFlags() / setWindowFlag() が大きく変わる
+PyQt5
+self.setWindowFlags(
+    Qt.FramelessWindowHint |
+    Qt.WindowStaysOnTopHint |
+    Qt.Tool
+)
+
+PyQt6
+self.setWindowFlags(
+    Qt.WindowType.FramelessWindowHint |
+    Qt.WindowType.WindowStaysOnTopHint |
+    Qt.WindowType.Tool
+)
+
+PyQt6では、多くの enum が階層化されています。
+PyQt5	PyQt6
+Qt.FramelessWindowHint	Qt.WindowType.FramelessWindowHint
+Qt.WindowStaysOnTopHint	Qt.WindowType.WindowStaysOnTopHint
+Qt.Tool	Qt.WindowType.Tool
+Qt.Dialog	Qt.WindowType.Dialog
+Qt.Window	Qt.WindowType.Window
+Qt.CustomizeWindowHint	Qt.WindowType.CustomizeWindowHint
+Qt.WindowCloseButtonHint	Qt.WindowType.WindowCloseButtonHint
+Qt.WindowMinimizeButtonHint	Qt.WindowType.WindowMinimizeButtonHint
+Qt.WindowMaximizeButtonHint	Qt.WindowType.WindowMaximizeButtonHint
+
+つまり、
+Qt.XXX
+
+だったものが、
+Qt.XXXType.XXX
+
+のようになるケースがかなりあります。
+2. よく使う Qt enum
+Alignment
+PyQt5
+label.setAlignment(Qt.AlignCenter)
+
+PyQt6
+label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+代表例：
+PyQt5	PyQt6
+Qt.AlignLeft	Qt.AlignmentFlag.AlignLeft
+Qt.AlignRight	Qt.AlignmentFlag.AlignRight
+Qt.AlignHCenter	Qt.AlignmentFlag.AlignHCenter
+Qt.AlignTop	Qt.AlignmentFlag.AlignTop
+Qt.AlignBottom	Qt.AlignmentFlag.AlignBottom
+Qt.AlignCenter	Qt.AlignmentFlag.AlignCenter
+Qt.AlignVCenter	Qt.AlignmentFlag.AlignVCenter
+
+MouseButton
+PyQt5
+if event.button() == Qt.LeftButton:
+    ...
+
+PyQt6
+if event.button() == Qt.MouseButton.LeftButton:
+    ...
+
+PyQt5	PyQt6
+Qt.LeftButton	Qt.MouseButton.LeftButton
+Qt.RightButton	Qt.MouseButton.RightButton
+Qt.MiddleButton	Qt.MouseButton.MiddleButton
+Qt.NoButton	Qt.MouseButton.NoButton
+
+Keyboard
+PyQt5
+if event.key() == Qt.Key_Escape:
+    ...
+
+PyQt6
+if event.key() == Qt.Key.Key_Escape:
+    ...
+
+例えば：
+Qt.Key_Return
+
+↓
+Qt.Key.Key_Return
+
+Qt.Key_Enter
+
+↓
+Qt.Key.Key_Enter
+
+Qt.Key_Escape
+
+↓
+Qt.Key.Key_Escape
+
+3. QFrame の Shape / Shadow
+PyQt5
+frame.setFrameShape(QFrame.StyledPanel)
+frame.setFrameShadow(QFrame.Raised)
+
+PyQt6
+frame.setFrameShape(QFrame.Shape.StyledPanel)
+frame.setFrameShadow(QFrame.Shadow.Raised)
+
+代表的には：
+PyQt5	PyQt6
+QFrame.NoFrame	QFrame.Shape.NoFrame
+QFrame.Box	QFrame.Shape.Box
+QFrame.Panel	QFrame.Shape.Panel
+QFrame.StyledPanel	QFrame.Shape.StyledPanel
+QFrame.HLine	QFrame.Shape.HLine
+QFrame.VLine	QFrame.Shape.VLine
+QFrame.Raised	QFrame.Shadow.Raised
+QFrame.Sunken	QFrame.Shadow.Sunken
+
+4. QLineEdit の EchoMode
+PyQt5
+line_edit.setEchoMode(QLineEdit.Password)
+
+PyQt6
+line_edit.setEchoMode(QLineEdit.EchoMode.Password)
+
+例えば：
+QLineEdit.Normal
+
+↓
+QLineEdit.EchoMode.Normal
+
+QLineEdit.Password
+
+↓
+QLineEdit.EchoMode.Password
+
+5. QAbstractItemView 系
+例えば選択モードなど。
+PyQt5
+widget.setSelectionMode(QAbstractItemView.SingleSelection)
+
+PyQt6
+widget.setSelectionMode(
+    QAbstractItemView.SelectionMode.SingleSelection
+)
+
+6. QTextEdit の LineWrapMode
+PyQt5
+text_edit.setLineWrapMode(QTextEdit.NoWrap)
+
+PyQt6
+text_edit.setLineWrapMode(
+    QTextEdit.LineWrapMode.NoWrap
+)
+
+7. QPixmap / QIcon
+基本的な使い方はかなり同じです。
+PyQt5
+icon = QIcon("icon.png")
+pixmap = QPixmap("image.png")
+
+PyQt6
+icon = QIcon("icon.png")
+pixmap = QPixmap("image.png")
+
+ここは基本的に変更ありません。
+8. QUrl
+これも基本的には同じです。
+PyQt5 / PyQt6
+url = QUrl("https://example.com")
+
+WebEngineなら、
+self.browser.setUrl(QUrl("https://example.com"))
+
+のままでOKです。
+9. QTimer
+基本的にはほぼ同じです。
+timer = QTimer(self)
+timer.timeout.connect(self.update)
+timer.start(1000)
+
+PyQt5 → PyQt6で大きな変更はありません。
+10. QApplication
+基本的には同じです。
+app = QApplication(sys.argv)
+window = QMainWindow()
+window.show()
+sys.exit(app.exec())
+
+ただし、ここは重要です。
+PyQt5
+sys.exit(app.exec_())
+
+PyQt6
+sys.exit(app.exec())
+
+PyQt6では exec_() ではなく exec() です。
+11. QWebEngineView
+基本的な部分はかなり同じです。
+browser = QWebEngineView()
+browser.setUrl(QUrl("https://example.com"))
+
+例えば、
+browser.page().runJavaScript(
+    "document.body.style.background = 'red';"
+)
+
+なども基本的に同じです。
+12. QScrollArea
+例えばスクロールバー。
+PyQt5
+scroll.setVerticalScrollBarPolicy(
+    Qt.ScrollBarAlwaysOff
+)
+
+PyQt6
+scroll.setVerticalScrollBarPolicy(
+    Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+)
+
+代表例：
+PyQt5	PyQt6
+Qt.ScrollBarAlwaysOff	Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+Qt.ScrollBarAlwaysOn	Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+Qt.ScrollBarAsNeeded	Qt.ScrollBarPolicy.ScrollBarAsNeeded
+
+13. QSizePolicy
+PyQt6ではここもよく遭遇します。
+PyQt5
+widget.setSizePolicy(
+    QSizePolicy.Expanding,
+    QSizePolicy.Fixed
+)
+
+PyQt6
+widget.setSizePolicy(
+    QSizePolicy.Policy.Expanding,
+    QSizePolicy.Policy.Fixed
+)
+
+14. QMessageBox
+もし使っているならかなり頻出です。
+PyQt5
+QMessageBox.information(
+    self,
+    "Title",
+    "Message"
+)
+
+これは基本的にそのまま。
+ただしボタンを扱う場合：
+
+PyQt5
+QMessageBox.Yes | QMessageBox.No
+
+PyQt6
+QMessageBox.StandardButton.Yes |
+QMessageBox.StandardButton.No
+
+15. QDialog
+例えばダイアログの結果。
+PyQt5
+if dialog.exec_() == QDialog.Accepted:
+    ...
+
+PyQt6
+if dialog.exec() == QDialog.DialogCode.Accepted:
+    ...
+
+ここも、
+exec_() → exec()
+
+＋ enum の変更です。
+16. QColor
+PyQt5
+color = QColor(Qt.red)
+
+PyQt6
+color = QColor(Qt.GlobalColor.red)
+
+同様に、
+Qt.black
+Qt.white
+Qt.red
+Qt.green
+Qt.blue
+
+↓
+Qt.GlobalColor.black
+Qt.GlobalColor.white
+Qt.GlobalColor.red
+Qt.GlobalColor.green
+Qt.GlobalColor.blue
+
+17. QMouseEvent の位置取得
+ここもPyQt6移植時に遭遇しやすいです。
+PyQt5では、
+
+event.pos()
+
+を使っていたコードが、PyQt6では
+event.position()
+
+になっています。
+例えば：
+
+PyQt5
+pos = event.pos()
+x = pos.x()
+y = pos.y()
+
+PyQt6
+pos = event.position()
+x = pos.x()
+y = pos.y()
+
+ただし position() は QPointF なので、整数が必要なら、
+pos = event.position().toPoint()
+
+とすることがあります。
+18. QWheelEvent
+PyQt5：
+event.angleDelta()
+
+PyQt6でも基本的に：
+event.angleDelta()
+
+なので、この辺はそのままです。
+19. QKeyEvent
+event.key()
+
+自体は同じですが、比較対象が変わります。
+PyQt5
+if event.key() == Qt.Key_Escape:
+
+PyQt6
+if event.key() == Qt.Key.Key_Escape:
+
+20. QTextCursor
+これもPyQt6で変更が入っています。
+PyQt5
+cursor.movePosition(QTextCursor.End)
+
+PyQt6
+cursor.movePosition(
+    QTextCursor.MoveOperation.End
+)
+
+21. QFont
+例えば Weight。
+PyQt5
+font.setWeight(QFont.Bold)
+
+PyQt6
+font.setWeight(QFont.Weight.Bold)
+
+22. Qt の enum は「カテゴリ化」されたと考えると分かりやすい
+PyQt5では大量のものが直接 Qt にぶら下がっていました。
+Qt.LeftButton
+Qt.AlignCenter
+Qt.Key_Escape
+Qt.FramelessWindowHint
+Qt.ScrollBarAlwaysOff
+Qt.Horizontal
+Qt.Vertical
+
+PyQt6ではカテゴリーごとに分けられています。
+Qt.MouseButton.LeftButton
+Qt.AlignmentFlag.AlignCenter
+Qt.Key.Key_Escape
+Qt.WindowType.FramelessWindowHint
+Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+Qt.Orientation.Horizontal
+Qt.Orientation.Vertical
+
+これがPyQt5 → PyQt6移植で一番重要な変更です。
+23. 今回のimportなら、特に注意するもの
+あなたのコード：
+from PyQt5.QtCore import Qt, QUrl, QTimer
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QLineEdit, QTextEdit,
+    QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
+)
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtGui import QIcon, QPixmap
+
+をPyQt6にすると、import自体は基本的に：
+from PyQt6.QtCore import Qt, QUrl, QTimer
+from PyQt6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QTextEdit,
+    QPushButton,
+    QFrame,
+    QVBoxLayout,
+    QMainWindow,
+    QScrollArea,
+)
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtGui import QIcon, QPixmap
+
+です。
+import名が変わるというより、importした後の enum の指定方法が変わるケースが多いです。
+
+24. 移植時の頻出変換早見表
+PyQt5	PyQt6
+Qt.FramelessWindowHint	Qt.WindowType.FramelessWindowHint
+Qt.WindowStaysOnTopHint	Qt.WindowType.WindowStaysOnTopHint
+Qt.Tool	Qt.WindowType.Tool
+Qt.Dialog	Qt.WindowType.Dialog
+Qt.AlignCenter	Qt.AlignmentFlag.AlignCenter
+Qt.AlignLeft	Qt.AlignmentFlag.AlignLeft
+Qt.AlignRight	Qt.AlignmentFlag.AlignRight
+Qt.LeftButton	Qt.MouseButton.LeftButton
+Qt.RightButton	Qt.MouseButton.RightButton
+Qt.MiddleButton	Qt.MouseButton.MiddleButton
+Qt.Key_Escape	Qt.Key.Key_Escape
+Qt.Key_Return	Qt.Key.Key_Return
+Qt.Horizontal	Qt.Orientation.Horizontal
+Qt.Vertical	Qt.Orientation.Vertical
+Qt.ScrollBarAlwaysOff	Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+Qt.ScrollBarAlwaysOn	Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+Qt.ScrollBarAsNeeded	Qt.ScrollBarPolicy.ScrollBarAsNeeded
+Qt.red	Qt.GlobalColor.red
+Qt.white	Qt.GlobalColor.white
+QFrame.StyledPanel	QFrame.Shape.StyledPanel
+QFrame.Raised	QFrame.Shadow.Raised
+QLineEdit.Password	QLineEdit.EchoMode.Password
+QTextEdit.NoWrap	QTextEdit.LineWrapMode.NoWrap
+QApplication.exec_()	QApplication.exec()
+QDialog.exec_()	QDialog.exec()
+QDialog.Accepted	QDialog.DialogCode.Accepted
+event.pos()	event.position()
+
+特に覚えておくといい変換
+# PyQt5
+Qt.FramelessWindowHint
+
+# PyQt6
+Qt.WindowType.FramelessWindowHint
+
+# PyQt5
+Qt.AlignCenter
+
+# PyQt6
+Qt.AlignmentFlag.AlignCenter
+
+# PyQt5
+Qt.LeftButton
+
+# PyQt6
+Qt.MouseButton.LeftButton
+
+# PyQt5
+Qt.Key_Escape
+
+# PyQt6
+Qt.Key.Key_Escape
+
+# PyQt5
+app.exec_()
+
+# PyQt6
+app.exec()
+
+なお、PyQt5→6は単純な文字置換だけでは済まない変更もあります。特に QMouseEvent、QAction、QFont、QFrame、QMessageBox、QFileDialog、QAbstractItemView、QHeaderView あたりまで含めるとかなり網羅的な変換表が作れます。
