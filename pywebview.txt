@@ -1,0 +1,33 @@
+#sample code
+import webview
+import threading
+from pathlib import Path
+import time
+
+def timed():
+	global web
+	time.sleep(3)
+	web.set_title('aaa')
+	web.resize(1000, 700)
+	web.move(0, 0)
+	web.evaluate_js('alert("aaa")')
+	web.toggle_fullscreen()
+	print(web.x)
+	print(web.y)
+	print(web.height)
+	print(web.width)
+
+times = threading.Thread(target=timed)
+times.start()
+
+web = webview.create_window(
+	title="test",
+	url="https://nofileteams.com/html-server/spawn",
+	resizable=False,
+	frameless=True,
+	easy_drag=False,
+	fullscreen=False,
+	transparent=True,
+)
+
+webview.start(icon=str(Path(__file__).parent / "icon.ico"))
