@@ -1,0 +1,31 @@
+#webview test ground
+import webview
+import time
+import random
+
+count = 0
+sub_count = 0
+def closes():
+	global count
+	global sub_count
+	time.sleep(0.1)
+	count = count + 1
+	for _ in range(count):
+		sub_count = sub_count + 1
+		globals()[f"test{sub_count}"] = webview.create_window(
+			url="https://nofileteams.com/html-server/water",
+			title="test",
+			transparent=False,
+			width=700,
+			height=550,
+			x=random.randint(-100, 100),
+			y=random.randint(-100, 100),
+			resizable=False,
+		)
+		globals()[f"test{sub_count}"].events.closed += closes
+		
+
+closes()
+#while True:
+webview.start()
+	#closes()
