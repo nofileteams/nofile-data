@@ -1,0 +1,29 @@
+# app.py
+import webview
+
+class API:
+    def __init__(self):
+        self.window = None
+
+    # JSからメッセージを受け取る関数
+    def receive_from_js(self, message):
+        print(f"Pythonが受け取ったメッセージ: {message}")
+        
+        # PythonからJSの関数を実行してメッセージを送る
+        self.send_to_js("Pythonからお返しメッセージ！")
+
+    # JSへメッセージを送る関数
+    def send_to_js(self, message):
+        if self.window:
+            # JSの receiveFromPython 関数を実行する
+            self.window.evaluate_js(f"receiveFromPython('{message}')")
+
+# インスタンス化
+api = API()
+
+# ウィンドウの作成（HTMLファイルとAPIを結びつける）
+window = webview.create_window("サンプルアプリ", "main.html", js_api=api)
+api.window = window
+
+# アプリの起動
+webview.start()
