@@ -1,0 +1,14 @@
+// 画像のプロパティ（位置と大きさ）を自前で保持する
+const myImageProps = {
+    x: 50,
+    y: 50,
+    width: 100,
+    height: 100
+};
+
+// 描画するときは管理している変数を使う
+ctx.drawImage(img, myImageProps.x, myImageProps.y, myImageProps.width, myImageProps.height);
+
+// 調べたい時は、このオブジェクトを参照する
+console.log(`位置: X=${myImageProps.x}, Y=${myImageProps.y}`);
+console.log(`大きさ: 幅=${myImageProps.width}, 高さ=${myImageProps.height}`);

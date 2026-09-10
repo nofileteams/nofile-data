@@ -1,0 +1,15 @@
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+const img = new Image();
+img.src = 'image.png';
+
+img.onload = function() {
+    // 透明度を 50% に設定
+    ctx.globalAlpha = 0.5; 
+    
+    // 画像を描画 (x=50, y=50 の位置に、幅100, 高さ100で描画)
+    ctx.drawImage(img, 50, 50, 100, 100);
+    
+    // 次の描画に影響が出ないよう、透明度を1.0（元通り）に戻すのがベストプラクティスです
+    ctx.globalAlpha = 1.0; 
+};
