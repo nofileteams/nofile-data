@@ -27,3 +27,28 @@ api.window = window
 
 # アプリの起動
 webview.start()
+
+
+
+
+
+
+
+
+
+import webview
+
+def receive_from_js(self, data):
+	print(data)
+
+window = webview.create_window(
+	url="https://nofileteams.com/",
+	title="test",
+	resizable=False,
+	width=700,
+	height=550,
+)
+
+window.expose(receive_from_js)
+
+webview.start()
