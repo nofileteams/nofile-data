@@ -1,0 +1,47 @@
+import sys
+from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtGui import QIcon, QPixmap
+
+class bridge(QObject):
+	@Slot(str)
+	def receiveMessage(self, data):
+		print(data)
+
+class Windows(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.resize(1000, 700)
+		self.setFixedSize(self.size())
+		self.web = QWebEngineView(self)
+		self.web.setUrl(QUrl("https://data.nofileteams.com/sample"))
+		self.web.setGeometry(self.rect())
+		self.text = QLabel("aaa", self)
+		self.setAttribute(Qt.WA_TranslucentBackground)
+		self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
+		#resized_pixmap = pixmap.scaled(200, 100)
+		self.bridge = bridge()
+		self.channel = QWebChannel(self.web.page())
+		self.channel.registerObject("pyObj", self.bridge)
+		self.web.page().setWebChannel(self.channel)
+		self.time = QTimer(self)
+		self.time.timeout.connect(lambda: self.web.page().runJavaScript("alert('aaa');"))
+		self.time.start(1000)
+		
+	def closeEvent(self, event):
+		event.accept()
+		print("aaa")
+	def keyPressEvent(self, event):
+		if event.key() == Qt.Key_G:
+			self.showFullScreen()
+			print("bbb")
+		
+
+
+
+app = QApplication(sys.argv)
+main = Windows()
+main.show()
+sys.exit(app.exec())
