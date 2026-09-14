@@ -1,0 +1,15 @@
+from PySide6.QtGui import QPixmap, QTransform
+from PySide6.QtCore import Qt
+
+# 1. 元の画像を読み込む
+pixmap = QPixmap("image.png")
+
+# 2. 変形（回転）を管理するQTransformオブジェクトを作成
+transform = QTransform()
+
+# 3. 回転角度を指定（例: 時計回りに 45 度）
+angle = 45
+transform.rotate(angle)
+
+# 4. 画像を回転させる（画質を保つために高品質のフィルタリングを適用）
+rotated_pixmap = pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
