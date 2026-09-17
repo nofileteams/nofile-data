@@ -1,9 +1,9 @@
 import sys
-from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot
+from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot, QPoint
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QTransform
 
 class bridge(QObject):
 	@Slot(str)
