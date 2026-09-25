@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>test</title>
+    <style>
+      body {
+        background-color: black;
+      }
+      .btn {
+        background-color: black;
+        color: green;
+        border: 3px solid green;
+        border-radius: 12px;
+        padding: 15px 60px;
+        font-size: 40px;
+      }
+      .canvas {
+        background-color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" class="canvas" width="500" height="350"></canvas>
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext('2d');
+    const width = 100;
+    const height = 100;
+    ctx.save();
+    ctx.translate(250, 175);
+    ctx.rotate(45 * Math.PI / 180);
+    ctx.fillStyle = "black";
+    ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.restore();
+  </script>
+</html>
