@@ -1,6 +1,21 @@
-function iscollide(rect1, rect2) {
-    return rect1.x < rect2.x + rect2.width &&
-           rect1.x + rect1.width > rect2.x &&
-           rect1.y < rect2.y + rect2.height &&
-           rect1.y + rect1.height > rect2.y;
+function isPixelCollision(img1, x1, y1, img2, x2, y2) {
+    // 1. 共通の重なり判定（矩形同士の交差エリアを計算）
+    const xMin = Math.max(x1, x2), xMax = Math.min(x1 + img1.width, x2 + img2.width);
+    const yMin = Math.max(y1, y2), yMax = Math.min(y1 + img1.height, y2 + img2.height);
+
+    if (xMin >= xMax || yMin >= yMax) return false; // 矩形自体が重なっていない
+
+    // 2. 共通エリアの幅と高さを算出
+    const w = xMax - xMin, h = yMax - yMin;
+
+    // 3. それぞれの画像から共通エリアのピクセルデータを取得（一時的なcanvasを使うか、あらかじめ保持したctxから取得）
+    // ※ここでは簡易的にctx1, ctx2からその場で取得する例
+    const data1 = ctx1.getImageData(xMin - x1, yMin - y1, w, h).data;
+    const data2 = ctx2.getImageData(xMin - x2, yMin - y2, w, h).data;
+
+    // 4. 重なり部分のアルファ値（不透明度）をチェック（4マス飛ばしでループ）
+    for (let i = 3; i < data1.length; i += 4) {
+        if (data1[i] > 0 && data2[i] > 0) return true; // 両方透明じゃないピクセルがあれば衝突！
+    }
+    return false;
 }
