@@ -14,3 +14,24 @@ const imgB = { x: 120, y: 80, width: 80, height: 80 };
 if (isColliding(imgA, imgB)) {
     console.log("当たっています！");
 }
+
+
+const intercanvas = createElement("canvas");
+const interctx = intercanvas.getContext("2d", { willReadFrequently: true });
+
+function touch(img, x, y, w, h, img2, x2, y2, w2, h2) {
+    const interx = Math.max(x, x2), intery = Math.max(y, y2);
+    const interw = Math.ceil(Math.min(x + w, x2 + w2) - interx), interh = Math.ceil(Math.min(y + h, y2 + h2) - intery);
+    if (interw <= 0 || interh <= 0) return false;
+    intercanvas.width = interw;
+    intercanvas.height = interh;
+    interctx.drawImage(img, x - interx, y - intery);
+    const pixela = interctx.getImageData(0, 0, interw, interh).data;
+    interctx.clearRect(0, 0, interw, interh);
+    interctx.drawImage(img, x2 - interx, y2 - intery);
+    const pixelb = interctx.getImageData(0, 0, interw, interh).data;
+    for (let i = 3; i < a.length; i += 4) {
+        if (pixela[i] > 0 && pixelb[i] > 0) return true
+    };
+    return false
+};
