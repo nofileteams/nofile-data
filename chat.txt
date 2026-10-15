@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AAA</title>
+<style>
+:root{--c:#ff1a1a;--bg:#070304;--panel:#0d0507;--text:#ffd9d9;--dim:#8a4a4a;--glow:0 0 4px var(--c),0 0 12px var(--c),0 0 24px var(--c);--font:"Courier New",monospace;--r:2px}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.6 var(--font);display:flex;overflow:hidden}
+/* liminal theme */
+body.liminal{--bg:#d8d0a0;--panel:#cfc693;--text:#4a4527;--dim:#8d8656;--glow:none;--font:"Times New Roman",serif;--r:0;
+background:repeating-linear-gradient(90deg,#d8d0a0 0 118px,#cdc590 118px 120px),linear-gradient(#e6dfb4,#c9c18c);font-size:16px}
+body.liminal::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+background:radial-gradient(ellipse at 50% 0,rgba(255,255,230,.55),transparent 60%),radial-gradient(ellipse at center,transparent 50%,rgba(60,50,10,.35));mix-blend-mode:multiply;animation:hum 4s infinite}
+@keyframes hum{0%,100%{opacity:1}48%{opacity:.93}50%{opacity:.8}52%{opacity:.95}}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:transparent;border:1px solid var(--c);color:var(--c);padding:6px 12px;cursor:pointer;border-radius:var(--r);text-shadow:var(--glow);box-shadow:var(--glow)}
+button:hover{background:var(--c);color:var(--bg);text-shadow:none}
+body.liminal button{color:var(--text);border-color:var(--dim);background:#e3dcae}
+body.liminal button:hover{background:#4a4527;color:#e3dcae}
+input,textarea,select{background:var(--bg);border:1px solid var(--c);border-radius:var(--r);padding:8px;width:100%;box-shadow:inset 0 0 8px rgba(0,0,0,.4),var(--glow)}
+body.liminal input,body.liminal textarea,body.liminal select{border-color:var(--dim);background:#e8e1b8;box-shadow:none}
+#side{width:260px;background:var(--panel);border-right:1px solid var(--c);box-shadow:var(--glow);display:flex;flex-direction:column;padding:10px;gap:8px;z-index:5;transition:margin .2s}
+body.liminal #side{box-shadow:none;border-color:var(--dim)}
+#side.hide{margin-left:-262px}
+#side-title{text-align:center;font-size:30px;font-weight:700;letter-spacing:.35em;padding:10px 0 12px 10px;margin-bottom:4px;color:var(--c);text-shadow:var(--glow);border-bottom:1px solid var(--c);box-shadow:0 8px 14px -12px var(--c);user-select:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.liminal #side-title{color:var(--text);text-shadow:none;box-shadow:none;font-weight:400;letter-spacing:.2em;border-color:var(--dim)}
+#list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.item{display:flex;align-items:center;padding:6px 8px;border:1px solid transparent;cursor:pointer;gap:6px}
+.item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item.on{border-color:var(--c);text-shadow:var(--glow)}
+body.liminal .item.on{border-color:var(--dim);background:#e3dcae;text-shadow:none}
+.item b{color:var(--dim);font-weight:400}.item b:hover{color:var(--c)}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--c);box-shadow:0 2px 14px -6px var(--c)}
+body.liminal header{border-color:var(--dim);box-shadow:none}
+#title{flex:1;font-size:26px;letter-spacing:.3em;color:var(--c);text-shadow:var(--glow);font-weight:700}
+body.liminal #title{color:var(--text);text-shadow:none;font-weight:400;letter-spacing:.15em}
+#model-tag{color:var(--dim);font-size:12px}
+#chat{flex:1;overflow:auto;padding:18px 14px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:860px;width:100%;margin:0 auto;padding:10px 14px;border:1px solid var(--dim);border-radius:var(--r);word-wrap:break-word;overflow-wrap:anywhere}
+.msg.user{border-color:var(--c);box-shadow:var(--glow)}
+body.liminal .msg{background:#e3dcae;box-shadow:none}
+body.bgimg:not(.liminal) .msg{background:rgba(0,0,0,.6)}
+body.custombg #side,body.custombg #in{background:transparent}
+body.custombg #box{background:transparent;backdrop-filter:blur(6px)}
+body.custombg #modal{background:rgba(0,0,0,.25)}
+.role{display:flex;justify-content:space-between;align-items:center}
+.cp{padding:0 8px;font-size:11px;letter-spacing:0;box-shadow:none;text-shadow:none;opacity:.55;line-height:1.6}
+.cp:hover{opacity:1}
+.role{font-size:11px;color:var(--c);text-shadow:var(--glow);letter-spacing:.2em;margin-bottom:4px}
+body.liminal .role{color:var(--dim);text-shadow:none}
+.msg img{max-width:240px;max-height:200px;margin:4px 6px 4px 0;border:1px solid var(--c)}
+.chip{display:inline-block;border:1px solid var(--dim);padding:0 8px;margin:2px 4px 2px 0;font-size:12px}
+.body{white-space:pre-wrap}
+.body pre{background:rgba(0,0,0,.35);padding:10px;overflow:auto;border-left:3px solid var(--c);white-space:pre}
+body.liminal .body pre{background:#cfc693}
+.body code{background:rgba(255,255,255,.08);padding:0 4px}
+#empty{margin:auto;color:var(--dim);text-align:center;letter-spacing:.3em}
+#inputbar{padding:10px 14px;border-top:1px solid var(--c);display:flex;flex-direction:column;gap:6px}
+body.liminal #inputbar{border-color:var(--dim)}
+#atts{display:flex;flex-wrap:wrap;gap:6px}
+#atts .a{position:relative;border:1px solid var(--c);padding:2px 22px 2px 6px;font-size:12px}
+#atts .a img{height:44px;display:block}
+#atts .a i{position:absolute;right:4px;top:0;cursor:pointer;font-style:normal}
+#row{display:flex;gap:8px;align-items:flex-end;max-width:900px;width:100%;margin:0 auto}
+#in{resize:none;max-height:200px;min-height:44px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
+#modal.show{display:flex}
+#box{background:var(--panel);border:1px solid var(--c);box-shadow:var(--glow);padding:18px;width:min(560px,94vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+body.liminal #box{box-shadow:none;border-color:var(--dim)}
+label{font-size:12px;color:var(--dim);display:block;margin-bottom:2px}
+.two{display:flex;gap:10px}.two>*{flex:1}
+input[type=color]{padding:0;height:38px}
+#drop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font-size:28px;background:rgba(0,0,0,.7);color:var(--c);z-index:90;pointer-events:none}
+@media(max-width:700px){#side{position:fixed;height:100%}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div id="side-title">AAA</div>
+  <button id="new">＋ 新しい会話</button>
+  <div id="list"></div>
+  <button id="clearall">全履歴を削除</button>
+</aside>
+<div id="main">
+  <header>
+    <button id="tog">☰</button>
+    <div id="title">AAA</div>
+    <span id="model-tag"></span>
+    <button id="set">設定</button>
+  </header>
+  <div id="chat"><div id="empty">. . .</div></div>
+  <div id="inputbar">
+    <div id="atts"></div>
+    <div id="row">
+      <button id="attach" title="ファイル/画像">📎</button>
+      <input type="file" id="file" multiple hidden>
+      <textarea id="in" rows="1" placeholder="メッセージ (Enterで送信 / Shift+Enterで改行)"></textarea>
+      <button id="send">送信</button>
+    </div>
+  </div>
+</div>
+<div id="drop">DROP FILES</div>
+<div id="modal"><div id="box">
+  <div style="font-size:18px;color:var(--c)">設定</div>
+  <div><label>API URL</label><input id="s-api"></div>
+  <div><label>モデル名</label><input id="s-model" list="models"><datalist id="models"></datalist></div>
+  <div><label>タイトル</label><input id="s-title"></div>
+  <div class="two">
+    <div><label>ユーザーの表示名 (表示のみ)</label><input id="s-un"></div>
+    <div><label>AIの表示名 (表示のみ)</label><input id="s-an"></div>
+  </div>
+  <div class="two">
+    <div><label>テーマ</label><select id="s-theme"><option value="neon">Neon</option><option value="liminal">Liminal Space</option></select></div>
+    <div><label>ネオン色</label><input type="color" id="s-color"></div>
+  </div>
+  <div class="two">
+    <div><label>背景</label><select id="s-bg"><option value="default">テーマ標準</option><option value="color">単色</option><option value="image">画像</option></select></div>
+    <div><label>背景色 (単色)</label><input type="color" id="s-bgc"></div>
+  </div>
+  <div><label>背景画像 (画像を選択)</label><input type="file" id="s-bgf" accept="image/*"></div>
+  <div><label>カスタム指示 (システムプロンプト)</label><textarea id="s-sys" rows="5"></textarea></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button id="s-reset">初期化</button><button id="s-close">保存して閉じる</button></div>
+  <div style="font-size:11px;color:var(--dim)">think は常に false で送信されます。</div>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const DEF={api:"http://localhost:11434",model:"liminal-space/dreamcore-ai:latest",title:"AAA",theme:"neon",color:"#ff1a1a",sys:"",userName:"YOU",aiName:"AI",bgMode:"default",bgColor:"#000000",bgImage:""};
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+let cfg={...DEF,...load("oc_cfg",{})}, convs=load("oc_convs",[]), cur=null, atts=[], ctrl=null;
+
+function save(){
+  try{localStorage.setItem("oc_convs",JSON.stringify(convs))}
+  catch{ // 容量超過時は画像を除外して保存
+    try{localStorage.setItem("oc_convs",JSON.stringify(convs.map(c=>({...c,messages:c.messages.map(m=>({...m,images:undefined}))}))))}catch{}
+  }
+}
+const saveCfg=()=>{try{localStorage.setItem("oc_cfg",JSON.stringify(cfg))}catch{}};
+
+function applyCfg(){
+  document.body.classList.toggle("liminal",cfg.theme==="liminal");
+  document.documentElement.style.setProperty("--c",cfg.color);
+  const useImg=cfg.bgMode==="image"&&cfg.bgImage;
+  document.body.classList.toggle("bgimg",!!useImg);
+  document.body.classList.toggle("custombg",!!useImg||cfg.bgMode==="color");
+  document.body.style.background=useImg?`url(${cfg.bgImage}) center/cover fixed`:cfg.bgMode==="color"?cfg.bgColor:"";
+  $("#title").textContent=cfg.title; $("#side-title").textContent=cfg.title; document.title=cfg.title;
+  $("#model-tag").textContent=cfg.model;
+}
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function md(t){
+  let h=esc(t);
+  h=h.replace(/```(\w*)\n?([\s\S]*?)(```|$)/g,(_,l,c)=>`<pre>${c}</pre>`);
+  h=h.replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>");
+  return h;
+}
+const curConv=()=>convs.find(c=>c.id===cur);
+
+function renderList(){
+  const l=$("#list"); l.innerHTML="";
+  convs.forEach(c=>{
+    const d=document.createElement("div"); d.className="item"+(c.id===cur?" on":"");
+    d.innerHTML=`<span>${esc(c.title)}</span><b title="削除">✕</b>`;
+    d.onclick=()=>{cur=c.id;renderList();renderChat()};
+    d.querySelector("b").onclick=e=>{e.stopPropagation();convs=convs.filter(x=>x.id!==c.id);if(cur===c.id)cur=null;save();renderList();renderChat()};
+    l.appendChild(d);
+  });
+}
+function msgEl(m){
+  const d=document.createElement("div"); d.className="msg "+m.role;
+  let h=`<div class="role"><span>${esc(m.role==="user"?cfg.userName:cfg.aiName)}</span><button class="cp">コピー</button></div>`;
+  (m.images||[]).forEach(i=>h+=`<img src="${i}">`);
+  (m.files||[]).forEach(f=>h+=`<span class="chip">📄 ${esc(f)}</span>`);
+  h+=`<div class="body">${md(m.shown??m.content)}</div>`;
+  d.innerHTML=h;
+  const b=d.querySelector(".cp");
+  b.onclick=async()=>{
+    const t=m.shown??m.content; // 添付ファイル本文は含めず、入力した文字のみ
+    try{await navigator.clipboard.writeText(t)}
+    catch{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
+    b.textContent="コピーしました";setTimeout(()=>b.textContent="コピー",1500);
+  };
+  return d;
+}
+function renderChat(){
+  const c=$("#chat"); c.innerHTML="";
+  const cv=curConv();
+  if(!cv||!cv.messages.length){c.innerHTML='<div id="empty">. . .</div>';return}
+  cv.messages.forEach(m=>c.appendChild(msgEl(m)));
+  c.scrollTop=c.scrollHeight;
+}
+function renderAtts(){
+  const a=$("#atts"); a.innerHTML="";
+  atts.forEach((x,i)=>{
+    const d=document.createElement("div"); d.className="a";
+    d.innerHTML=(x.type==="image"?`<img src="${x.data}">`:`📄 ${esc(x.name)}`)+`<i>✕</i>`;
+    d.querySelector("i").onclick=()=>{atts.splice(i,1);renderAtts()};
+    a.appendChild(d);
+  });
+}
+function addFiles(files){
+  [...files].forEach(f=>{
+    const r=new FileReader();
+    if(f.type.startsWith("image/")){
+      r.onload=()=>{atts.push({type:"image",name:f.name,data:r.result});renderAtts()};
+      r.readAsDataURL(f);
+    }else{
+      r.onload=()=>{atts.push({type:"text",name:f.name,data:r.result});renderAtts()};
+      r.readAsText(f);
+    }
+  });
+}
+
+async function send(){
+  if(ctrl){ctrl.abort();return}
+  const text=$("#in").value.trim();
+  if(!text&&!atts.length)return;
+  if(!curConv()){const c={id:Date.now(),title:(text||atts[0].name).slice(0,28),messages:[]};convs.unshift(c);cur=c.id}
+  const cv=curConv();
+  const imgs=atts.filter(a=>a.type==="image").map(a=>a.data);
+  const tfs=atts.filter(a=>a.type==="text");
+  let content=text;
+  tfs.forEach(f=>content+=`\n\n[添付ファイル: ${f.name}]\n\`\`\`\n${f.data}\n\`\`\``);
+  cv.messages.push({role:"user",content,shown:text,images:imgs.length?imgs:undefined,files:tfs.map(f=>f.name)});
+  $("#in").value="";$("#in").style.height="auto";atts=[];renderAtts();
+  const ai={role:"assistant",content:""};
+  cv.messages.push(ai); save(); renderList(); renderChat();
+  const el=$("#chat").lastElementChild.querySelector(".body");
+  const msgs=[];
+  if(cfg.sys.trim())msgs.push({role:"system",content:cfg.sys});
+  cv.messages.slice(0,-1).forEach(m=>{
+    const o={role:m.role,content:m.content};
+    if(m.images?.length)o.images=m.images.map(i=>i.split(",")[1]); // base64のみ
+    msgs.push(o);
+  });
+  ctrl=new AbortController(); $("#send").textContent="停止";
+  try{
+    const res=await fetch(cfg.api.replace(/\/$/,"")+"/api/chat",{method:"POST",signal:ctrl.signal,
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:cfg.model,messages:msgs,stream:true,think:false})});
+    if(!res.ok)throw new Error(res.status+" "+await res.text());
+    const rd=res.body.getReader(),dec=new TextDecoder();let buf="";
+    while(true){
+      const {done,value}=await rd.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split("\n");buf=lines.pop();
+      for(const ln of lines){
+        if(!ln.trim())continue;
+        const j=JSON.parse(ln);
+        if(j.error)throw new Error(j.error);
+        if(j.message?.content){ai.content+=j.message.content;el.innerHTML=md(ai.content);$("#chat").scrollTop=$("#chat").scrollHeight}
+      }
+    }
+  }catch(e){
+    if(e.name!=="AbortError"){ai.content+=`\n\n[エラー] ${e.message}\n(Ollamaが起動しているか、OLLAMA_ORIGINS=* を設定したか確認してください)`;el.innerHTML=md(ai.content)}
+  }
+  ctrl=null;$("#send").textContent="送信";
+  if(!ai.content)cv.messages.pop();
+  save();renderChat();
+}
+
+// events
+$("#send").onclick=send;
+$("#in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}});
+$("#in").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,200)+"px"});
+$("#in").addEventListener("paste",e=>{const f=[...e.clipboardData.files];if(f.length){e.preventDefault();addFiles(f)}});
+$("#attach").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{addFiles(e.target.files);e.target.value=""};
+$("#new").onclick=()=>{cur=null;renderList();renderChat()};
+$("#tog").onclick=()=>$("#side").classList.toggle("hide");
+$("#clearall").onclick=()=>{if(confirm("全ての会話履歴を削除しますか？")){convs=[];cur=null;save();renderList();renderChat()}};
+let dc=0;
+addEventListener("dragenter",e=>{e.preventDefault();dc++;$("#drop").style.display="flex"});
+addEventListener("dragleave",()=>{if(--dc<=0){dc=0;$("#drop").style.display="none"}});
+addEventListener("dragover",e=>e.preventDefault());
+addEventListener("drop",e=>{e.preventDefault();dc=0;$("#drop").style.display="none";addFiles(e.dataTransfer.files)});
+
+// settings
+let tmpBg="";
+$("#s-bgf").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{ // 縮小してJPEG化 (localStorage容量対策)
+    const s=Math.min(1,1920/Math.max(img.width,img.height)),cv=document.createElement("canvas");
+    cv.width=img.width*s;cv.height=img.height*s;cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    tmpBg=cv.toDataURL("image/jpeg",.8);URL.revokeObjectURL(u);$("#s-bg").value="image";
+  };
+  img.src=u;
+};
+async function openSet(){
+  $("#s-api").value=cfg.api;$("#s-model").value=cfg.model;$("#s-title").value=cfg.title;
+  $("#s-theme").value=cfg.theme;$("#s-color").value=cfg.color;$("#s-sys").value=cfg.sys;
+  $("#s-un").value=cfg.userName;$("#s-an").value=cfg.aiName;
+  $("#s-bg").value=cfg.bgMode;$("#s-bgc").value=cfg.bgColor;tmpBg=cfg.bgImage;
+  $("#modal").classList.add("show");
+  try{const r=await fetch(cfg.api.replace(/\/$/,"")+"/api/tags");const j=await r.json();
+    $("#models").innerHTML=j.models.map(m=>`<option value="${esc(m.name)}">`).join("")}catch{}
+}
+function closeSet(){
+  cfg={api:$("#s-api").value.trim()||DEF.api,model:$("#s-model").value.trim()||DEF.model,title:$("#s-title").value||DEF.title,
+    theme:$("#s-theme").value,color:$("#s-color").value,sys:$("#s-sys").value,
+    userName:$("#s-un").value.trim()||DEF.userName,aiName:$("#s-an").value.trim()||DEF.aiName,
+    bgMode:$("#s-bg").value,bgColor:$("#s-bgc").value,bgImage:tmpBg};
+  saveCfg();applyCfg();if(!ctrl)renderChat();$("#modal").classList.remove("show");
+}
+$("#set").onclick=openSet;$("#s-close").onclick=closeSet;
+$("#s-reset").onclick=()=>{cfg={...DEF};saveCfg();applyCfg();openSet()};
+$("#modal").onclick=e=>{if(e.target.id==="modal")closeSet()};
+
+applyCfg();renderList();renderChat();
+</script>
+</body>
+</html>
