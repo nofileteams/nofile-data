@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AAA</title>
+<link rel="icon" type="image/png" href="icon.png">
 <style>
 :root{--c:#ff1a1a;--bg:#070304;--panel:#0d0507;--text:#ffd9d9;--dim:#8a4a4a;--glow:0 0 4px var(--c),0 0 12px var(--c),0 0 24px var(--c);--font:"Courier New",monospace;--r:2px}
 *{box-sizing:border-box}
@@ -38,7 +39,8 @@ header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:
 body.liminal header{border-color:var(--dim);box-shadow:none}
 #title{flex:1;font-size:26px;letter-spacing:.3em;color:var(--c);text-shadow:var(--glow);font-weight:700}
 body.liminal #title{color:var(--text);text-shadow:none;font-weight:400;letter-spacing:.15em}
-#model-tag{color:var(--dim);font-size:12px}
+#logo{width:34px;height:34px;object-fit:cover;flex:none;filter:drop-shadow(0 0 5px var(--c))}
+body.liminal #logo{filter:none}
 #chat{flex:1;overflow:auto;padding:18px 14px;display:flex;flex-direction:column;gap:14px}
 .msg{max-width:860px;width:100%;margin:0 auto;padding:10px 14px;border:1px solid var(--dim);border-radius:var(--r);word-wrap:break-word;overflow-wrap:anywhere}
 .msg.user{border-color:var(--c);box-shadow:var(--glow)}
@@ -50,6 +52,9 @@ body.custombg #modal{background:rgba(0,0,0,.25)}
 .role{display:flex;justify-content:space-between;align-items:center}
 .cp{padding:0 8px;font-size:11px;letter-spacing:0;box-shadow:none;text-shadow:none;opacity:.55;line-height:1.6}
 .cp:hover{opacity:1}
+.src{font-size:12px;color:var(--dim);margin-bottom:6px;overflow-wrap:anywhere}.src a{color:var(--c);margin-right:10px}
+body.liminal .src a{color:var(--text)}
+#wsb.on,body.liminal #wsb.on{background:var(--c);color:var(--bg);text-shadow:none}
 .role{font-size:11px;color:var(--c);text-shadow:var(--glow);letter-spacing:.2em;margin-bottom:4px}
 body.liminal .role{color:var(--dim);text-shadow:none}
 .msg img{max-width:240px;max-height:200px;margin:4px 6px 4px 0;border:1px solid var(--c)}
@@ -88,8 +93,9 @@ input[type=color]{padding:0;height:38px}
 <div id="main">
   <header>
     <button id="tog">☰</button>
+    <img id="logo" src="icon.png" alt="" onerror="this.style.display='none'">
     <div id="title">AAA</div>
-    <span id="model-tag"></span>
+    
     <button id="set">設定</button>
   </header>
   <div id="chat"><div id="empty">. . .</div></div>
@@ -97,6 +103,7 @@ input[type=color]{padding:0;height:38px}
     <div id="atts"></div>
     <div id="row">
       <button id="attach" title="ファイル/画像">📎</button>
+      <button id="wsb" title="この送信でWeb検索する">🔍</button>
       <input type="file" id="file" multiple hidden>
       <textarea id="in" rows="1" placeholder="メッセージ (Enterで送信 / Shift+Enterで改行)"></textarea>
       <button id="send">送信</button>
@@ -104,11 +111,16 @@ input[type=color]{padding:0;height:38px}
   </div>
 </div>
 <div id="drop">DROP FILES</div>
+<div id="toast"></div>
+<style>#toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);display:none;background:var(--panel);border:1px solid var(--c);padding:6px 14px;z-index:200;font-size:13px;max-width:90vw}</style>
 <div id="modal"><div id="box">
   <div style="font-size:18px;color:var(--c)">設定</div>
   <div><label>API URL</label><input id="s-api"></div>
   <div><label>モデル名</label><input id="s-model" list="models"><datalist id="models"></datalist></div>
-  <div><label>タイトル</label><input id="s-title"></div>
+  <div class="two">
+    <div><label>タイトル</label><input id="s-title"></div>
+    <div><label>左上のアイコン表示</label><select id="s-logo"><option value="1">表示</option><option value="0">非表示</option></select></div>
+  </div>
   <div class="two">
     <div><label>ユーザーの表示名 (表示のみ)</label><input id="s-un"></div>
     <div><label>AIの表示名 (表示のみ)</label><input id="s-an"></div>
@@ -122,6 +134,58 @@ input[type=color]{padding:0;height:38px}
     <div><label>背景色 (単色)</label><input type="color" id="s-bgc"></div>
   </div>
   <div><label>背景画像 (画像を選択)</label><input type="file" id="s-bgf" accept="image/*"></div>
+  <div class="two">
+    <div><label>AIが自動的に検索をする</label><select id="s-auto"><option value="0">OFF</option><option value="1">ON</option></select></div>
+    <div><label>検索プロバイダ</label><select id="s-sp"><option value="wiki">Wikipedia</option><option value="ollama">Ollama Web Search API</option><option value="tavily">Tavily</option><option value="serper">Serper (Google検索)</option><option value="google">Google Programmable Search</option><option value="brave">Brave Search</option><option value="jina">Jina Search</option><option value="exa">Exa</option><option value="searxng">SearXNG (自前サーバー)</option></select></div>
+  </div>
+  <div class="two">
+    <div><label>Wikipedia言語 (ja, en...)</label><input id="s-wl"></div>
+    <div><label>検索件数 (1-8)</label><input id="s-sn" type="number" min="1" max="8"></div>
+  </div>
+  <div><label>APIキー (Tavily/Serper/Google/Brave/Jina/Exa: 選択中のプロバイダ用)</label><input id="s-xk" type="password" autocomplete="off"></div>
+  <div class="two">
+    <div><label>Google 検索エンジンID (cx)</label><input id="s-cx"></div>
+    <div><label>SearXNG URL (例 http://localhost:8080)</label><input id="s-sx"></div>
+  </div>
+  <div><label>Ollama APIキー (Ollama Web Search用)</label><input id="s-ok" type="password" autocomplete="off"></div>
+  <div><label>検索エンドポイント (任意 / 空欄=https://ollama.com/api/web_search)</label><input id="s-se"></div>
+  <div><label>検索判断用モデル (空欄=メインモデル)</label><input id="s-jm" list="models"></div>
+  <div><label>検索の要否を判断中の表示テキスト</label><input id="s-jt"></div>
+  <div class="two">
+    <div><label>回答を自動で読み上げる</label><select id="s-atts"><option value="0">OFF</option><option value="1">ON</option></select></div>
+    <div><label>音声エンジン (失敗時はブラウザ標準)</label><select id="s-te"><option value="browser">ブラウザ標準</option><option value="google">Google Cloud TTS</option><option value="puter">Puter.js</option><option value="eleven">ElevenLabs API</option><option value="speechify">Speechify API</option></select></div>
+  </div>
+  <div class="two">
+    <div><label>ブラウザの声</label><select id="s-tv"></select></div>
+    <div><label>言語コード</label><input id="s-tl"></div>
+  </div>
+  <div class="two">
+    <div><label>速度 (0.5-2)</label><input id="s-tr" type="number" min="0.5" max="2" step="0.1"></div>
+    <div><label>高さ (0-2)</label><input id="s-tp" type="number" min="0" max="2" step="0.1"></div>
+  </div>
+  <div class="two">
+    <div><label>Google APIキー</label><input id="s-gk" type="password" autocomplete="off"></div>
+    <div><label>Google 音声名</label><input id="s-gv"></div>
+  </div>
+  <div class="two">
+    <div><label>Puter.js プロバイダ</label><select id="s-pp"><option value="aws-polly">AWS Polly</option><option value="openai">OpenAI</option><option value="elevenlabs">ElevenLabs</option><option value="gemini">Gemini</option><option value="xai">xAI (Grok)</option><option value="speechify">Speechify</option></select></div>
+    <div><label>Puter.js 声 (voice)</label><input id="s-pv" list="pv-list"></div>
+  </div>
+  <div class="two">
+    <div><label>Puter.js モデル (model)</label><input id="s-pm" list="pm-list"></div>
+    <div><label>Puter.js instructions (OpenAI/Gemini用: 話し方の指示)</label><input id="s-pi"></div>
+    <datalist id="pv-list"></datalist><datalist id="pm-list"></datalist>
+  </div>
+  <div class="two">
+    <div><label>ElevenLabs APIキー</label><input id="s-ek" type="password" autocomplete="off"></div>
+    <div><label>ElevenLabs Voice ID</label><input id="s-ev"></div>
+  </div>
+  <div><label>ElevenLabs モデル</label><input id="s-em"></div>
+  <div class="two">
+    <div><label>Speechify APIキー</label><input id="s-sk" type="password" autocomplete="off"></div>
+    <div><label>Speechify Voice ID</label><input id="s-sv"></div>
+  </div>
+  <div><label>Speechify モデル</label><input id="s-sm"></div>
   <div><label>カスタム指示 (システムプロンプト)</label><textarea id="s-sys" rows="5"></textarea></div>
   <div style="display:flex;gap:8px;justify-content:flex-end"><button id="s-reset">初期化</button><button id="s-close">保存して閉じる</button></div>
   <div style="font-size:11px;color:var(--dim)">think は常に false で送信されます。</div>
@@ -129,7 +193,9 @@ input[type=color]{padding:0;height:38px}
 
 <script>
 const $=s=>document.querySelector(s);
-const DEF={api:"http://localhost:11434",model:"liminal-space/dreamcore-ai:latest",title:"AAA",theme:"neon",color:"#ff1a1a",sys:"",userName:"YOU",aiName:"AI",bgMode:"default",bgColor:"#000000",bgImage:""};
+const DEF={api:"http://localhost:11434",model:"liminal-space/dreamcore-ai:latest",title:"AAA",theme:"neon",color:"#ff1a1a",sys:"",userName:"YOU",aiName:"AI",bgMode:"default",bgColor:"#000000",bgImage:"",autoSearch:false,searchProvider:"wiki",wikiLang:"ja",ollamaKey:"",searchEndpoint:"",searchN:3,judgeModel:"",judgeText:"🔍 検索の要否を判断中…",
+autoTTS:false,ttsEngine:"browser",ttsVoice:"",ttsRate:1,ttsPitch:1,ttsLang:"ja-JP",gKey:"",gVoice:"ja-JP-Neural2-B",
+eKey:"",eVoice:"21m00Tcm4TlvDq8ikWAM",eModel:"eleven_multilingual_v2",sKey:"",sVoice:"geffen_32",sModel:"simba-3.2",pProvider:"aws-polly",pVoice:"Takumi",pModel:"",pInstr:"",searchKeys:{},googleCx:"",searxUrl:"",showLogo:true};
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 let cfg={...DEF,...load("oc_cfg",{})}, convs=load("oc_convs",[]), cur=null, atts=[], ctrl=null;
 
@@ -148,8 +214,7 @@ function applyCfg(){
   document.body.classList.toggle("bgimg",!!useImg);
   document.body.classList.toggle("custombg",!!useImg||cfg.bgMode==="color");
   document.body.style.background=useImg?`url(${cfg.bgImage}) center/cover fixed`:cfg.bgMode==="color"?cfg.bgColor:"";
-  $("#title").textContent=cfg.title; $("#side-title").textContent=cfg.title; document.title=cfg.title;
-  $("#model-tag").textContent=cfg.model;
+  $("#title").textContent=cfg.title;$("#logo").hidden=!cfg.showLogo; $("#side-title").textContent=cfg.title; document.title=cfg.title;
 }
 const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 function md(t){
@@ -172,12 +237,15 @@ function renderList(){
 }
 function msgEl(m){
   const d=document.createElement("div"); d.className="msg "+m.role;
-  let h=`<div class="role"><span>${esc(m.role==="user"?cfg.userName:cfg.aiName)}</span><button class="cp">コピー</button></div>`;
+  let h=`<div class="role"><span>${esc(m.role==="user"?cfg.userName:cfg.aiName)}</span><span>${m.role==="assistant"?'<button class="cp sp" title="読み上げ">🔊</button> ':""}<button class="cp cc">コピー</button></span></div>`;
   (m.images||[]).forEach(i=>h+=`<img src="${i}">`);
   (m.files||[]).forEach(f=>h+=`<span class="chip">📄 ${esc(f)}</span>`);
+  if(m.sources){const s=m.sources;h+=`<div class="src">🔍 ${esc(s.query)}${s.error?` — 検索失敗: ${esc(s.error)}`:""} ${(s.items||[]).map(x=>/^https?:\/\//.test(x.url)?`<a href="${esc(x.url).replace(/"/g,"%22")}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`:"").join("")}</div>`}
   h+=`<div class="body">${md(m.shown??m.content)}</div>`;
   d.innerHTML=h;
-  const b=d.querySelector(".cp");
+  const sp=d.querySelector(".sp");
+  if(sp)sp.onclick=()=>{if(spkBtn===sp){stopSpeak();return}speak(m.content,sp)};
+  const b=d.querySelector(".cc");
   b.onclick=async()=>{
     const t=m.shown??m.content; // 添付ファイル本文は含めず、入力した文字のみ
     try{await navigator.clipboard.writeText(t)}
@@ -237,8 +305,10 @@ async function send(){
     if(m.images?.length)o.images=m.images.map(i=>i.split(",")[1]); // base64のみ
     msgs.push(o);
   });
-  ctrl=new AbortController(); $("#send").textContent="停止";
+  ctrl=new AbortController(); $("#send").textContent="停止"; stopSpeak(); let failed=0;
   try{
+    const extra=await webSearchFlow(text,el,ai,ctrl.signal); // 履歴には保存しない
+    if(extra)msgs.splice(msgs.length-1,0,{role:"system",content:extra}); // 最新のユーザー発言の直前にシステムとして挿入
     const res=await fetch(cfg.api.replace(/\/$/,"")+"/api/chat",{method:"POST",signal:ctrl.signal,
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:cfg.model,messages:msgs,stream:true,think:false})});
@@ -255,12 +325,203 @@ async function send(){
         if(j.message?.content){ai.content+=j.message.content;el.innerHTML=md(ai.content);$("#chat").scrollTop=$("#chat").scrollHeight}
       }
     }
-  }catch(e){
+  }catch(e){failed=1;
     if(e.name!=="AbortError"){ai.content+=`\n\n[エラー] ${e.message}\n(Ollamaが起動しているか、OLLAMA_ORIGINS=* を設定したか確認してください)`;el.innerHTML=md(ai.content)}
   }
   ctrl=null;$("#send").textContent="送信";
   if(!ai.content)cv.messages.pop();
   save();renderChat();
+  if(!failed&&cfg.autoTTS&&ai.content)speak(ai.content);
+}
+
+// web search
+let forceSearch=false,tmpKeys={},prevSP="wiki";
+$("#s-sp").onchange=e=>{tmpKeys[prevSP]=$("#s-xk").value.trim();prevSP=e.target.value;$("#s-xk").value=tmpKeys[prevSP]||""};
+const JUDGE=()=>`You decide whether a web search is needed to answer the user's message. Today is ${new Date().toISOString().slice(0,10)}.
+Search IS needed for: recent/current events, news, prices, versions, specific people/places/products you may not know, or when the user asks to search.
+Search is NOT needed for: chit-chat, greetings, coding help, math, translation, rewriting, creative writing, general knowledge.
+Reply ONLY with JSON: {"search":true or false,"query":"short search query in the most suitable language"}`;
+async function extSearch(q,sig,n){
+  const P=cfg.searchProvider,k=(cfg.searchKeys||{})[P]||"",H={"Content-Type":"application/json"};
+  if(["wiki","ollama"].includes(P))return null;
+  if(P!=="searxng"&&!k)throw new Error("APIキー未設定");
+  const J=async r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()};
+  const cut=s=>(s||"").slice(0,1200),Q=encodeURIComponent(q);
+  if(P==="tavily"){const j=await J(await fetch("https://api.tavily.com/search",{method:"POST",signal:sig,headers:{...H,Authorization:"Bearer "+k},body:JSON.stringify({query:q,max_results:n})}));
+    return(j.results||[]).map(x=>({title:x.title,url:x.url,content:cut(x.content)}))}
+  if(P==="serper"){const j=await J(await fetch("https://google.serper.dev/search",{method:"POST",signal:sig,headers:{...H,"X-API-KEY":k},body:JSON.stringify({q,num:n,hl:/^[a-z-]+$/i.test(cfg.wikiLang)?cfg.wikiLang:"ja"})}));
+    return(j.organic||[]).slice(0,n).map(x=>({title:x.title,url:x.link,content:cut(x.snippet)}))}
+  if(P==="google"){if(!cfg.googleCx)throw new Error("検索エンジンID(cx)未設定");
+    const j=await J(await fetch(`https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(k)}&cx=${encodeURIComponent(cfg.googleCx)}&q=${Q}&num=${Math.min(n,10)}`,{signal:sig}));
+    return(j.items||[]).map(x=>({title:x.title,url:x.link,content:cut(x.snippet)}))}
+  if(P==="brave"){const j=await J(await fetch(`https://api.search.brave.com/res/v1/web/search?q=${Q}&count=${n}`,{signal:sig,headers:{Accept:"application/json","X-Subscription-Token":k}}));
+    return(j.web?.results||[]).map(x=>({title:x.title,url:x.url,content:cut(x.description)}))}
+  if(P==="jina"){const j=await J(await fetch("https://s.jina.ai/?q="+Q,{signal:sig,headers:{Accept:"application/json",Authorization:"Bearer "+k,"X-Respond-With":"no-content"}}));
+    return(j.data||[]).slice(0,n).map(x=>({title:x.title,url:x.url,content:cut(x.description||x.content)}))}
+  if(P==="exa"){const j=await J(await fetch("https://api.exa.ai/search",{method:"POST",signal:sig,headers:{...H,"x-api-key":k},body:JSON.stringify({query:q,numResults:n,contents:{text:{maxCharacters:1000}}})}));
+    return(j.results||[]).map(x=>({title:x.title,url:x.url,content:cut(x.text)}))}
+  if(P==="searxng"){const b=(cfg.searxUrl||"").replace(/\/$/,"");if(!b)throw new Error("SearXNG URL未設定");
+    const j=await J(await fetch(`${b}/search?q=${Q}&format=json`,{signal:sig}));
+    return(j.results||[]).slice(0,n).map(x=>({title:x.title,url:x.url,content:cut(x.content)}))}
+  return null;
+}
+async function doSearch(q,sig){
+  const n=cfg.searchN;
+  const ext=await extSearch(q,sig,n);if(ext)return ext;
+  if(cfg.searchProvider==="ollama"){
+    const r=await fetch(cfg.searchEndpoint||"https://ollama.com/api/web_search",{method:"POST",signal:sig,
+      headers:{"Content-Type":"application/json",Authorization:"Bearer "+cfg.ollamaKey},body:JSON.stringify({query:q,max_results:n})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return((await r.json()).results||[]).slice(0,n).map(x=>({title:x.title,url:x.url,content:(x.content||"").slice(0,1200)}));
+  }
+  const l=/^[a-z-]+$/i.test(cfg.wikiLang)?cfg.wikiLang:"ja";
+  const r=await fetch(`https://${l}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=${n}&prop=extracts&exintro=1&explaintext=1&exchars=1000&exlimit=${n}&format=json&origin=*`,{signal:sig});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const pg=Object.values((await r.json()).query?.pages||{}).sort((a,b)=>a.index-b.index);
+  return pg.map(p=>({title:p.title,url:`https://${l}.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g,"_"))}`,content:p.extract||""}));
+}
+async function webSearchFlow(text,el,ai,sig){
+  if(!text)return"";
+  let q=null;
+  if(forceSearch)q=text;
+  else if(cfg.autoSearch){
+    el.textContent=cfg.judgeText;
+    try{ // 判断用の呼び出しは履歴に入れない
+      const r=await fetch(cfg.api.replace(/\/$/,"")+"/api/chat",{method:"POST",signal:sig,headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:cfg.judgeModel||cfg.model,stream:false,think:false,format:"json",
+          messages:[{role:"system",content:JUDGE()},{role:"user",content:text}]})});
+      const p=JSON.parse((await r.json()).message.content);
+      if(p.search===true&&p.query)q=String(p.query);
+    }catch(e){if(e.name==="AbortError")throw e}
+  }
+  if(forceSearch){forceSearch=false;$("#wsb").classList.remove("on")}
+  if(!q)return"";
+  el.textContent="🔍 検索中: "+q;
+  try{
+    const items=await doSearch(q,sig);
+    ai.sources={query:q,items:items.map(({title,url})=>({title,url}))};
+    if(!items.length)return"";
+    return`以下は、あなた自身がWeb検索(検索語: "${q}")で調べて得た情報です。ユーザーが提示・提供した資料ではありません。「ご提示の検索結果」「提供された情報」「検索結果によると」のような言い方は避け、自分で調べた内容として自然に回答に活かしてください。質問と無関係な結果は無視してください。出典に触れるときはサイト名やURLで示してください。\n\n`+items.map((x,i)=>`(${i+1}) ${x.title}\n${x.url}\n${x.content}`).join("\n\n");
+  }catch(e){if(e.name==="AbortError")throw e;ai.sources={query:q,error:e.message};return""}
+}
+$("#wsb").onclick=()=>{forceSearch=!forceSearch;$("#wsb").classList.toggle("on",forceSearch)};
+
+// text to speech
+let spkId=0,spkBtn=null,curAudio=null;
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",4000)}
+function stopSpeak(){spkId++;speechSynthesis.cancel();if(curAudio){curAudio.pause();curAudio=null}if(spkBtn){spkBtn.textContent="🔊";spkBtn=null}}
+const cleanTTS=t=>t.replace(/```[\s\S]*?(```|$)/g,"（コード省略）").replace(/`([^`]*)`/g,"$1").replace(/\*\*|__/g,"").replace(/^#+\s*/gm,"").replace(/https?:\/\/\S+/g,"").replace(/\n{2,}/g,"\n").trim();
+function chunks(t,max){
+  const out=[];let cur="";
+  for(const s of t.split(/(?<=[。．！？!?\n])/)){
+    if((cur+s).length>max&&cur){out.push(cur);cur=""}
+    cur+=s;while(cur.length>max){out.push(cur.slice(0,max));cur=cur.slice(max)}
+  }
+  if(cur)out.push(cur);return out.filter(x=>x.trim());
+}
+function browserSpeak(parts,id){
+  return new Promise(res=>{
+    let i=0;
+    const next=()=>{
+      if(id!==spkId||i>=parts.length)return res();
+      const u=new SpeechSynthesisUtterance(parts[i++]);
+      const v=speechSynthesis.getVoices().find(v=>v.name===cfg.ttsVoice);
+      if(v){u.voice=v;u.lang=v.lang}else u.lang=cfg.ttsLang;
+      u.rate=cfg.ttsRate;u.pitch=cfg.ttsPitch;u.onend=next;u.onerror=()=>res();
+      speechSynthesis.speak(u);
+    };
+    next();
+  });
+}
+async function googleChunk(t){
+  if(!cfg.gKey)throw new Error("APIキー未設定");
+  const voice={languageCode:cfg.ttsLang};if(cfg.gVoice)voice.name=cfg.gVoice;
+  const r=await fetch("https://texttospeech.googleapis.com/v1/text:synthesize?key="+encodeURIComponent(cfg.gKey),{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({input:{text:t},voice,audioConfig:{audioEncoding:"MP3",speakingRate:cfg.ttsRate,pitch:(cfg.ttsPitch-1)*10}})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const j=await r.json();if(!j.audioContent)throw new Error("音声データなし");
+  return"data:audio/mp3;base64,"+j.audioContent;
+}
+async function elevenChunk(t){
+  if(!cfg.eKey)throw new Error("APIキー未設定");
+  const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+encodeURIComponent(cfg.eVoice||"21m00Tcm4TlvDq8ikWAM"),{method:"POST",
+    headers:{"xi-api-key":cfg.eKey,"Content-Type":"application/json"},
+    body:JSON.stringify({text:t,model_id:cfg.eModel||"eleven_multilingual_v2",
+      voice_settings:{stability:.5,similarity_boost:.75,speed:Math.min(1.2,Math.max(.7,cfg.ttsRate))}})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return URL.createObjectURL(await r.blob());
+}
+async function speechifyChunk(t){
+  if(!cfg.sKey)throw new Error("APIキー未設定");
+  const r=await fetch("https://api.speechify.ai/v1/audio/speech",{method:"POST",
+    headers:{Authorization:"Bearer "+cfg.sKey,"Content-Type":"application/json"},
+    body:JSON.stringify({input:t,voice_id:cfg.sVoice||"geffen_32",audio_format:"mp3",model:cfg.sModel||"simba-3.2"})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const j=await r.json();if(!j.audio_data)throw new Error("音声データなし");
+  return"data:audio/mp3;base64,"+j.audio_data;
+}
+let puterP=null;
+const loadPuter=()=>window.puter?Promise.resolve():(puterP??=new Promise((res,rej)=>{
+  const s=document.createElement("script");s.src="https://js.puter.com/v2/";s.onload=()=>res();
+  s.onerror=()=>{puterP=null;rej(new Error("Puter.js読込失敗"))};document.head.appendChild(s);
+}));
+async function puterChunk(t){
+  await loadPuter();
+  const p=cfg.pProvider,o={provider:p};
+  if(cfg.pVoice)o.voice=cfg.pVoice;
+  if(cfg.pModel&&p!=="aws-polly"&&p!=="xai")o.model=cfg.pModel;
+  if(cfg.pInstr&&(p==="openai"||p==="gemini"))o.instructions=cfg.pInstr;
+  if(p==="aws-polly")o.language=cfg.ttsLang;
+  if(p==="xai")o.language=cfg.ttsLang.split("-")[0]||"auto";
+  return puter.ai.txt2speech(t,o); // Audio要素が返る
+}
+const PUTER={
+  "aws-polly":{m:[],v:["Takumi","Tomoko","Kazuha","Mizuki","Joanna"]},
+  openai:{m:["gpt-4o-mini-tts","tts-1","tts-1-hd"],v:["alloy","ash","coral","echo","fable","nova","onyx","sage","shimmer","ballad","verse","marin","cedar"]},
+  elevenlabs:{m:["eleven_multilingual_v2","eleven_v4","eleven_v4_turbo","eleven_v3","eleven_flash_v2_5","eleven_flash_v2"],v:["21m00Tcm4TlvDq8ikWAM"]},
+  gemini:{m:["gemini-3.8-flash-tts","gemini-3.8-flash-lite-tts"],v:["Kore","Puck","Zephyr","Charon","Fenrir","Leda","Orus","Aoede","Sulafat"]},
+  xai:{m:[],v:["eve","ara","rex","sal","leo"]},
+  speechify:{m:["simba-3.2"],v:["geffen_32","dominic_32","harper_32","hugh_32","imogen_32"]}
+};
+function puterLists(p,reset){
+  const x=PUTER[p]||{m:[],v:[]};
+  $("#pm-list").innerHTML=x.m.map(s=>`<option value="${s}">`).join("");
+  $("#pv-list").innerHTML=x.v.map(s=>`<option value="${s}">`).join("");
+  if(reset){$("#s-pm").value=x.m[0]||"";$("#s-pv").value=x.v[0]||""} // プロバイダ変更時は既定値に
+}
+$("#s-pp").onchange=e=>puterLists(e.target.value,true);
+const ENG={google:googleChunk,eleven:elevenChunk,speechify:speechifyChunk,puter:puterChunk};
+const playUrl=(url,id)=>new Promise((res,rej)=>{
+  if(id!==spkId)return res();
+  const a=typeof url==="string"?new Audio(url):url;curAudio=a;a.onended=res;a.onerror=()=>rej(new Error("再生失敗"));a.play().catch(rej);
+});
+async function speak(text,btn){
+  stopSpeak();const id=spkId;text=cleanTTS(text);if(!text)return;
+  if(btn){btn.textContent="■";spkBtn=btn}
+  const done=()=>{if(id===spkId&&btn&&spkBtn===btn){btn.textContent="🔊";spkBtn=null}};
+  const parts=chunks(text,1200);let i=0;
+  const fn=ENG[cfg.ttsEngine];
+  if(fn){
+    try{
+      let p=fn(parts[0]);p.catch(()=>{});
+      for(;i<parts.length;i++){
+        const url=await p;if(id!==spkId)return;
+        if(i+1<parts.length){p=fn(parts[i+1]);p.catch(()=>{})} // 次を先読み
+        await playUrl(url,id);
+      }
+      done();return;
+    }catch(e){
+      if(id!==spkId)return;
+      toast(cfg.ttsEngine+" 失敗 → ブラウザ標準で読み上げます ("+(e.message||e)+")");
+    }
+  }
+  await browserSpeak(chunks(parts.slice(i).join(""),180),id);done();
+}
+function fillVoices(sel){
+  const vs=speechSynthesis.getVoices();
+  $("#s-tv").innerHTML='<option value="">自動 (言語コードに合う声)</option>'+vs.map(v=>`<option value="${esc(v.name).replace(/"/g,"&quot;")}">${esc(v.name)} (${esc(v.lang)})</option>`).join("");
+  $("#s-tv").value=sel;
 }
 
 // events
@@ -293,7 +554,15 @@ $("#s-bgf").onchange=e=>{
 };
 async function openSet(){
   $("#s-api").value=cfg.api;$("#s-model").value=cfg.model;$("#s-title").value=cfg.title;
-  $("#s-theme").value=cfg.theme;$("#s-color").value=cfg.color;$("#s-sys").value=cfg.sys;
+  $("#s-theme").value=cfg.theme;$("#s-logo").value=cfg.showLogo?"1":"0";$("#s-color").value=cfg.color;$("#s-sys").value=cfg.sys;
+  $("#s-auto").value=cfg.autoSearch?"1":"0";$("#s-sp").value=cfg.searchProvider;$("#s-wl").value=cfg.wikiLang;
+  $("#s-sn").value=cfg.searchN;
+  tmpKeys={...(cfg.searchKeys||{})};prevSP=cfg.searchProvider;$("#s-xk").value=tmpKeys[prevSP]||"";$("#s-cx").value=cfg.googleCx;$("#s-sx").value=cfg.searxUrl;$("#s-ok").value=cfg.ollamaKey;$("#s-se").value=cfg.searchEndpoint;$("#s-jm").value=cfg.judgeModel;$("#s-jt").value=cfg.judgeText;
+  $("#s-atts").value=cfg.autoTTS?"1":"0";$("#s-te").value=cfg.ttsEngine;$("#s-tl").value=cfg.ttsLang;
+  $("#s-tr").value=cfg.ttsRate;$("#s-tp").value=cfg.ttsPitch;$("#s-gk").value=cfg.gKey;$("#s-gv").value=cfg.gVoice;
+  $("#s-pp").value=cfg.pProvider;$("#s-pv").value=cfg.pVoice;$("#s-ek").value=cfg.eKey;$("#s-ev").value=cfg.eVoice;
+  $("#s-em").value=cfg.eModel;$("#s-pm").value=cfg.pModel;$("#s-pi").value=cfg.pInstr;puterLists(cfg.pProvider,false);$("#s-sk").value=cfg.sKey;$("#s-sv").value=cfg.sVoice;$("#s-sm").value=cfg.sModel;
+  fillVoices(cfg.ttsVoice);speechSynthesis.onvoiceschanged=()=>fillVoices($("#s-tv").value||cfg.ttsVoice);
   $("#s-un").value=cfg.userName;$("#s-an").value=cfg.aiName;
   $("#s-bg").value=cfg.bgMode;$("#s-bgc").value=cfg.bgColor;tmpBg=cfg.bgImage;
   $("#modal").classList.add("show");
@@ -301,9 +570,18 @@ async function openSet(){
     $("#models").innerHTML=j.models.map(m=>`<option value="${esc(m.name)}">`).join("")}catch{}
 }
 function closeSet(){
+  tmpKeys[prevSP]=$("#s-xk").value.trim();
   cfg={api:$("#s-api").value.trim()||DEF.api,model:$("#s-model").value.trim()||DEF.model,title:$("#s-title").value||DEF.title,
-    theme:$("#s-theme").value,color:$("#s-color").value,sys:$("#s-sys").value,
+    theme:$("#s-theme").value,showLogo:$("#s-logo").value==="1",color:$("#s-color").value,sys:$("#s-sys").value,
     userName:$("#s-un").value.trim()||DEF.userName,aiName:$("#s-an").value.trim()||DEF.aiName,
+    autoSearch:$("#s-auto").value==="1",searchProvider:$("#s-sp").value,wikiLang:$("#s-wl").value.trim()||"ja",
+    searchN:Math.min(8,Math.max(1,+$("#s-sn").value||3)),ollamaKey:$("#s-ok").value.trim(),
+    searchEndpoint:$("#s-se").value.trim(),searchKeys:tmpKeys,googleCx:$("#s-cx").value.trim(),searxUrl:$("#s-sx").value.trim(),judgeModel:$("#s-jm").value.trim(),judgeText:$("#s-jt").value||DEF.judgeText,
+    autoTTS:$("#s-atts").value==="1",ttsEngine:$("#s-te").value,ttsVoice:$("#s-tv").value,ttsLang:$("#s-tl").value.trim()||"ja-JP",
+    ttsRate:Math.min(2,Math.max(.5,+$("#s-tr").value||1)),ttsPitch:Math.min(2,Math.max(0,+$("#s-tp").value||1)),
+    gKey:$("#s-gk").value.trim(),gVoice:$("#s-gv").value.trim(),
+    pProvider:$("#s-pp").value,pVoice:$("#s-pv").value.trim(),eKey:$("#s-ek").value.trim(),eVoice:$("#s-ev").value.trim(),
+    eModel:$("#s-em").value.trim(),pModel:$("#s-pm").value.trim(),pInstr:$("#s-pi").value.trim(),sKey:$("#s-sk").value.trim(),sVoice:$("#s-sv").value.trim(),sModel:$("#s-sm").value.trim(),
     bgMode:$("#s-bg").value,bgColor:$("#s-bgc").value,bgImage:tmpBg};
   saveCfg();applyCfg();if(!ctrl)renderChat();$("#modal").classList.remove("show");
 }
