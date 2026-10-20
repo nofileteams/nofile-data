@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini Live</title>
+<style>
+:root{--neon:#ffffff;--bg:#000000;--glow:1;--dim:color-mix(in srgb,var(--neon) 55%,var(--bg));--line:color-mix(in srgb,var(--neon) 35%,var(--bg))}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--neon);font:15px/1.6 "Hiragino Sans","Yu Gothic UI","Noto Sans JP",system-ui,sans-serif;display:flex;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+.glow{text-shadow:0 0 calc(4px*var(--glow)) var(--neon),0 0 calc(12px*var(--glow)) var(--neon)}
+.box{border:1px solid var(--neon);box-shadow:0 0 calc(4px*var(--glow)) var(--neon),0 0 calc(14px*var(--glow)) color-mix(in srgb,var(--neon) 60%,transparent),inset 0 0 calc(6px*var(--glow)) color-mix(in srgb,var(--neon) 35%,transparent)}
+button{background:transparent;border:1px solid var(--neon);border-radius:999px;padding:6px 16px;cursor:pointer;box-shadow:0 0 calc(3px*var(--glow)) var(--neon),0 0 calc(9px*var(--glow)) color-mix(in srgb,var(--neon) 50%,transparent);text-shadow:0 0 calc(4px*var(--glow)) var(--neon);transition:background .15s,color .15s}
+button:hover{background:var(--neon);color:var(--bg);text-shadow:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px dashed var(--neon);outline-offset:3px}
+input,textarea,select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
+input[type=color]{padding:2px;height:36px;width:60px;cursor:pointer}
+input[type=range]{padding:0;border:0}
+aside{width:280px;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px;gap:10px;transition:margin .2s}
+aside.hide{margin-left:-281px}
+aside h2{margin:0;font-size:16px;font-weight:600}
+#list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.item.on{border-color:var(--neon);box-shadow:0 0 calc(8px*var(--glow)) var(--neon)}
+.item .t{flex:1;overflow:hidden}
+.item .t b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .t small{color:var(--dim)}
+.item .x{padding:0 8px;border-radius:8px;box-shadow:none}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:18px;font-weight:600;flex:1;letter-spacing:.04em}
+#status{color:var(--dim);font-size:13px}
+#chat{flex:1;overflow:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.msg{max-width:min(680px,86%);padding:10px 14px;border-radius:16px;border:1px solid var(--line);white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;border-color:var(--neon);box-shadow:0 0 calc(6px*var(--glow)) color-mix(in srgb,var(--neon) 70%,transparent)}
+.msg.model{align-self:flex-start;border-color:var(--dim)}
+.empty{margin:auto;text-align:center;color:var(--dim)}
+footer{padding:14px 16px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px}
+#orb{width:64px;height:64px;border-radius:50%;padding:0;display:grid;place-items:center;flex:none}
+#orb svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;filter:drop-shadow(0 0 calc(4px*var(--glow)) var(--neon))}
+#orb.live{animation:pulse 2s ease-in-out infinite}
+#orb.talk{animation:pulse .6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 calc(10px*var(--glow)) var(--neon),0 0 calc(34px*var(--glow)) var(--neon)}}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--neon);box-shadow:0 0 calc(6px*var(--glow)) var(--neon),0 0 calc(14px*var(--glow)) var(--neon);margin-right:8px}
+#mic:hover .dot{background:var(--bg);box-shadow:none}
+#mic.off{color:var(--dim);border-style:dashed;box-shadow:none;text-shadow:none}
+#mic.off .dot{background:transparent;border:1px solid var(--dim);box-shadow:none}
+#txt{flex:1}
+dialog{background:var(--bg);color:var(--neon);border-radius:18px;padding:22px;width:min(520px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog h2{margin:0 0 12px;font-size:18px}
+input[type=checkbox]{width:auto;accent-color:var(--neon)}
+.chk{display:flex;align-items:center;gap:8px;color:var(--neon);margin:8px 0}
+label{display:block;margin:12px 0 4px;color:var(--dim);font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sw{width:28px;height:28px;padding:0;border-radius:50%}
+.right{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+@media(max-width:700px){aside{position:fixed;inset:0 auto 0 0;background:var(--bg);z-index:5;width:80%}aside.hide{margin-left:-85%}footer{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<aside id="side" class="hide">
+  <h2 class="glow">会話履歴</h2>
+  <div class="row"><button id="newBtn">新規</button><button id="clearAll">全て削除</button></div>
+  <div id="list"></div>
+</aside>
+<main>
+  <header>
+    <button id="hist" aria-label="履歴">☰</button>
+    <h1 class="glow">Gemini Live</h1>
+    <span id="status">未接続</span>
+    <button id="setBtn">設定</button>
+  </header>
+  <div id="chat"></div>
+  <footer>
+    <button id="orb" class="box" aria-label="接続 / 切断">
+      <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </button>
+    <button id="mic" aria-pressed="true"><i class="dot"></i><span>マイク ON</span></button>
+    <input id="txt" placeholder="メッセージを入力（Enter で送信）" autocomplete="off">
+    <button id="send">送信</button>
+  </footer>
+</main>
+
+<dialog id="dlg" class="box">
+  <h2 class="glow">設定</h2>
+  <label>Gemini API キー（このブラウザ内にのみ保存）</label>
+  <input id="sKey" type="password" autocomplete="off" placeholder="AIza...">
+  <label>モデル（一覧から選ぶ）</label>
+  <select id="sModelSel"></select>
+  <label>モデル名（直接入力も可）</label>
+  <input id="sModel">
+  <label>声</label>
+  <select id="sVoice"><option>Puck</option><option>Charon</option><option>Kore</option><option>Fenrir</option><option>Aoede</option><option>Zephyr</option></select>
+  <label>マイク入力（聞き取りの調整）</label>
+  <select id="sDev"><option value="">既定のマイク</option></select>
+  <label class="chk"><input id="sEcho" type="checkbox">エコーキャンセル（スピーカー音の回り込みを除去）</label>
+  <label class="chk"><input id="sNoise" type="checkbox">ノイズ抑制（周囲の雑音を低減）</label>
+  <label class="chk"><input id="sAgc" type="checkbox">自動ゲイン調整（声の大きさを自動で整える）</label>
+  <label>入力ゲイン（声が小さいときは上げる）<span id="gv"></span></label>
+  <input id="sGain" type="range" min="0.5" max="4" step="0.1">
+  <label>カスタムインストラクション</label>
+  <textarea id="sInst" rows="5" placeholder="例: あなたは親しみやすい日本語の話し相手です。短く答えてください。"></textarea>
+  <label>ネオンの色</label>
+  <div class="row" id="neonSw"><input id="sNeon" type="color"></div>
+  <label>背景色</label>
+  <div class="row" id="bgSw"><input id="sBg" type="color"></div>
+  <label>光の強さ</label>
+  <input id="sGlow" type="range" min="0" max="2.5" step="0.1">
+  <div class="right"><button id="reset">色を初期化</button><button id="close">保存して閉じる</button></div>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const DEF={key:'',model:'gemini-2.5-flash-native-audio-preview-09-2025',voice:'Puck',inst:'',neon:'#ffffff',bg:'#000000',glow:1,dev:'',echo:true,noise:true,agc:true,gain:1};
+let S={...DEF,...LS('gl_settings',{})};
+let sessions=LS('gl_sessions',[]);
+let cur=null,ws=null,micOn=true,connected=false;
+
+/* ---------- settings / theme ---------- */
+const NEONS=['#ffffff','#00f0ff','#ff2bd6','#39ff14','#ffe600','#ff6a00'];
+const BGS=['#000000','#0a0a1f','#1a0b2e','#001a12','#1c1c1c','#2a0a0a'];
+function mkSw(box,list,input,key){list.forEach(c=>{const b=document.createElement('button');b.className='sw';b.style.background=c;b.title=c;b.onclick=()=>{S[key]=c;input.value=c;theme()};box.appendChild(b)})}
+function theme(){const r=document.documentElement.style;r.setProperty('--neon',S.neon);r.setProperty('--bg',S.bg);r.setProperty('--glow',S.glow);save('gl_settings',S)}
+mkSw($('neonSw'),NEONS,$('sNeon'),'neon');mkSw($('bgSw'),BGS,$('sBg'),'bg');
+const MODELS=['gemini-2.5-flash-native-audio-preview-09-2025','gemini-2.5-flash-native-audio-preview-12-2025','gemini-live-2.5-flash-preview','gemini-2.0-flash-live-001'];
+$('sModelSel').innerHTML=MODELS.map(m=>`<option value="${m}">${m}</option>`).join('')+'<option value="">カスタム（下に入力）</option>';
+function syncSel(){$('sModelSel').value=MODELS.includes($('sModel').value.trim())?$('sModel').value.trim():''}
+$('sModelSel').onchange=e=>{if(e.target.value)$('sModel').value=e.target.value;else $('sModel').focus()};
+$('sModel').oninput=syncSel;
+function track(){return stream&&stream.getAudioTracks()[0]}
+function applyC(){const t=track();if(t)t.applyConstraints({echoCancellation:S.echo,noiseSuppression:S.noise,autoGainControl:S.agc}).catch(()=>{})}
+[['sEcho','echo'],['sNoise','noise'],['sAgc','agc']].forEach(([id,k])=>{$(id).onchange=e=>{S[k]=e.target.checked;theme();applyC()}});
+$('sGain').oninput=e=>{S.gain=+e.target.value;$('gv').textContent=' ×'+S.gain.toFixed(1);if(gainNode)gainNode.gain.value=S.gain;theme()};
+$('sDev').onchange=e=>{S.dev=e.target.value;theme()};
+async function loadDevs(){try{const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='audioinput');const o=$('sDev');o.innerHTML='';o.add(new Option('既定のマイク',''));d.forEach((x,i)=>o.add(new Option(x.label||'マイク '+(i+1),x.deviceId)));o.value=S.dev}catch{}}
+function fill(){$('sEcho').checked=S.echo;$('sNoise').checked=S.noise;$('sAgc').checked=S.agc;$('sGain').value=S.gain;$('gv').textContent=' ×'+(+S.gain).toFixed(1);loadDevs();$('sKey').value=S.key;$('sModel').value=S.model;syncSel();$('sVoice').value=S.voice;$('sInst').value=S.inst;$('sNeon').value=S.neon;$('sBg').value=S.bg;$('sGlow').value=S.glow}
+$('sNeon').oninput=e=>{S.neon=e.target.value;theme()};
+$('sBg').oninput=e=>{S.bg=e.target.value;theme()};
+$('sGlow').oninput=e=>{S.glow=+e.target.value;theme()};
+$('setBtn').onclick=()=>{fill();$('dlg').showModal()};
+$('close').onclick=()=>{S.key=$('sKey').value.trim();S.model=$('sModel').value.trim()||DEF.model;S.voice=$('sVoice').value;S.inst=$('sInst').value;theme();$('dlg').close();if(connected)status('次回の接続から反映されます')};
+$('reset').onclick=()=>{S.neon=DEF.neon;S.bg=DEF.bg;S.glow=DEF.glow;fill();theme()};
+
+/* ---------- history ---------- */
+const chat=$('chat');
+function status(t){$('status').textContent=t}
+function newSession(){lu=lm=null;cur={id:Date.now(),title:'新しい会話',msgs:[]};render()}
+function persist(){if(!cur||!cur.msgs.length)return;const i=sessions.findIndex(s=>s.id===cur.id);if(i<0)sessions.unshift(cur);else sessions[i]=cur;save('gl_sessions',sessions);list()}
+function bubble(role,text){const d=document.createElement('div');d.className='msg '+role;d.textContent=text;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d}
+function render(){chat.innerHTML='';if(!cur.msgs.length){chat.innerHTML='<div class="empty glow">下の丸いボタンで接続して、話しかけてください。</div>'}cur.msgs.forEach(m=>bubble(m.role,m.text));list()}
+function list(){const L=$('list');L.innerHTML='';if(!sessions.length){L.innerHTML='<div class="empty">履歴はまだありません</div>';return}
+sessions.forEach(s=>{const d=document.createElement('div');d.className='item'+(cur&&cur.id===s.id?' on':'');
+d.innerHTML='<div class="t"><b></b><small></small></div><button class="x" title="削除">×</button>';
+d.querySelector('b').textContent=s.title;d.querySelector('small').textContent=new Date(s.id).toLocaleString('ja-JP');
+d.onclick=()=>{if(connected){cleanup();status('未接続')}lu=lm=null;cur=s;render();closeSide()};
+d.querySelector('.x').onclick=e=>{e.stopPropagation();sessions=sessions.filter(x=>x.id!==s.id);save('gl_sessions',sessions);if(cur&&cur.id===s.id){if(connected)cleanup();newSession();status('未接続')}else list()};
+L.appendChild(d)})}
+function closeSide(){if(innerWidth<=700)$('side').classList.add('hide')}
+$('newBtn').onclick=()=>{const was=connected;if(was)cleanup();newSession();closeSide();$('txt').value='';
+  if(was){status('新しい会話を開始します…');connect()}else status('新しい会話')};
+$('clearAll').onclick=()=>{if(!sessions.length)return;const was=connected;if(was)cleanup();sessions=[];save('gl_sessions',sessions);newSession();if(was)connect()};
+$('hist').onclick=()=>$('side').classList.toggle('hide');
+
+/* ---------- audio ---------- */
+let gainNode,inCtx,outCtx,stream,node,nextT=0,srcs=[],talkT;
+const WK=`class P extends AudioWorkletProcessor{constructor(){super();this.b=[];this.n=0}process(i){const c=i[0][0];if(c){this.b.push(c.slice());this.n+=c.length;if(this.n>=2048){const o=new Float32Array(this.n);let p=0;for(const x of this.b){o.set(x,p);p+=x.length}this.port.postMessage(o,[o.buffer]);this.b=[];this.n=0}}return true}}registerProcessor('p',P)`;
+const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+async function startMic(){
+  const A={echoCancellation:S.echo,noiseSuppression:S.noise,autoGainControl:S.agc,channelCount:1,sampleRate:{ideal:16000}};
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:S.dev?{...A,deviceId:{exact:S.dev}}:A})}
+  catch(e){if(!S.dev)throw e;stream=await navigator.mediaDevices.getUserMedia({audio:A})}stream.getAudioTracks().forEach(t=>t.enabled=micOn);
+  inCtx=new AudioContext({sampleRate:16000});
+  await inCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([WK],{type:'application/javascript'})));
+  const src=inCtx.createMediaStreamSource(stream);node=new AudioWorkletNode(inCtx,'p');gainNode=inCtx.createGain();gainNode.gain.value=S.gain;src.connect(gainNode);gainNode.connect(node);
+  node.port.onmessage=e=>{if(!micOn||!ws||ws.readyState!==1)return;const f=e.data,pcm=new Int16Array(f.length);
+    for(let i=0;i<f.length;i++){const v=Math.max(-1,Math.min(1,f[i]));pcm[i]=v<0?v*32768:v*32767}
+    ws.send(JSON.stringify({realtimeInput:{audio:{data:b64(pcm.buffer),mimeType:'audio/pcm;rate=16000'}}}))};
+  outCtx=new AudioContext({sampleRate:24000});nextT=0;
+}
+function play(b){const bin=atob(b),n=bin.length>>1,buf=new ArrayBuffer(n*2),u=new Uint8Array(buf);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const i16=new Int16Array(buf),ab=outCtx.createBuffer(1,n,24000),ch=ab.getChannelData(0);for(let i=0;i<n;i++)ch[i]=i16[i]/32768;
+  const s=outCtx.createBufferSource();s.buffer=ab;s.connect(outCtx.destination);nextT=Math.max(outCtx.currentTime,nextT);s.start(nextT);nextT+=ab.duration;
+  srcs.push(s);s.onended=()=>{srcs=srcs.filter(x=>x!==s)};
+  $('orb').classList.add('talk');clearTimeout(talkT);talkT=setTimeout(()=>$('orb').classList.remove('talk'),Math.max(300,(nextT-outCtx.currentTime)*1000+100));}
+function stopPlay(){srcs.forEach(s=>{try{s.stop()}catch{}});srcs=[];nextT=0;$('orb').classList.remove('talk')}
+
+/* ---------- live session ---------- */
+let lu=null,lm=null,ready=false,pending=null;
+function live(role){const o=role==='user'?lu:lm;if(o)return o;const n={role,text:'',el:bubble(role,'')};if(role==='user')lu=n;else lm=n;chat.querySelector('.empty')?.remove();return n}
+function commit(role){const o=role==='user'?lu:lm;if(!o)return;if(o.text.trim()){cur.msgs.push({role,text:o.text.trim()});if(cur.title==='新しい会話'&&role==='user')cur.title=o.text.trim().slice(0,30);persist()}else o.el.remove();if(role==='user')lu=null;else lm=null}
+function addText(role,t){const o=live(role);o.text+=t;o.el.textContent=o.text;chat.scrollTop=chat.scrollHeight}
+async function onMsg(ev){
+  let d=typeof ev.data==='string'?ev.data:await ev.data.text();d=JSON.parse(d);
+  if(d.setupComplete){ready=true;status(micOn?'接続中 — 話してください':'接続中 — マイクOFF');if(pending){const t=pending;pending=null;doSend(t)}return}
+  const c=d.serverContent;if(!c)return;
+  if(c.interrupted){stopPlay();commit('model')}
+  if(c.inputTranscription?.text)addText('user',c.inputTranscription.text);
+  if(c.outputTranscription?.text){commit('user');addText('model',c.outputTranscription.text)}
+  (c.modelTurn?.parts||[]).forEach(p=>{if(p.inlineData?.data)play(p.inlineData.data)});
+  if(c.turnComplete){commit('user');commit('model')}
+}
+async function connect(){
+  if(!S.key){pending=null;status('設定でAPIキーを入力してください');$('setBtn').click();return}
+  if(!cur||cur.msgs.length&&sessions.every(s=>s.id!==cur.id))newSession();
+  status('接続中…');
+  try{await startMic()}catch(e){pending=null;status('マイクを使用できません: '+e.message);return}
+  ws=new WebSocket('wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key='+encodeURIComponent(S.key));
+  ws.onopen=()=>{const setup={model:'models/'+S.model.replace(/^models\//,''),generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:S.voice}}}},inputAudioTranscription:{},outputAudioTranscription:{}};
+    if(S.inst.trim())setup.systemInstruction={parts:[{text:S.inst.trim()}]};ws.send(JSON.stringify({setup}));
+    connected=true;$('orb').classList.add('live');};
+  ws.onmessage=e=>onMsg(e).catch(console.error);
+  ws.onerror=()=>status('接続エラー（APIキー・モデル名を確認）');
+  const me=ws;ws.onclose=e=>{if(ws&&me!==ws)return;status(e.reason?'切断: '+e.reason.slice(0,80):'未接続');cleanup()};
+}
+function cleanup(){ready=false;pending=null;commit('user');commit('model');connected=false;try{ws&&ws.close()}catch{}ws=null;stream&&stream.getTracks().forEach(t=>t.stop());node&&node.disconnect();inCtx&&inCtx.close();stopPlay();outCtx&&outCtx.close();
+  $('orb').classList.remove('live','talk');}
+$('orb').onclick=()=>{connected?(cleanup(),status('未接続')):connect()};
+$('mic').onclick=()=>{micOn=!micOn;stream&&stream.getAudioTracks().forEach(t=>t.enabled=micOn);
+  $('mic').querySelector('span').textContent=micOn?'マイク ON':'マイク OFF';$('mic').classList.toggle('off',!micOn);$('mic').setAttribute('aria-pressed',micOn);
+  status(connected?(micOn?'マイク ON — 話してください':'マイク OFF — 音声は送信されません'):(micOn?'マイク ON':'マイク OFF'))};
+function doSend(t){commit('user');commit('model');cur.msgs.push({role:'user',text:t});if(cur.title==='新しい会話')cur.title=t.slice(0,30);persist();chat.querySelector('.empty')?.remove();bubble('user',t);
+  ws.send(JSON.stringify({realtimeInput:{text:t}}))}
+function sendText(){const t=$('txt').value.trim();if(!t)return;$('txt').value='';
+  if(ws&&ws.readyState===1&&ready)return doSend(t);
+  pending=t;if(!connected)connect();else status('接続中… 完了後に送信します')}
+$('txt').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)sendText()};
+$('send').onclick=sendText;
+
+theme();newSession();
+</script>
+</body>
+</html>
