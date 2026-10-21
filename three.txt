@@ -40,3 +40,19 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+
+
+// 1. テクスチャローダーの作成
+const loader = new THREE.TextureLoader();
+
+// 2. 画像の読み込みとカラースペースの指定（sRGBを推奨）
+const texture = loader.load('path/to/image.jpg');
+texture.colorSpace = THREE.SRGBColorSpace;
+
+// 3. マテリアルに適用
+const material = new THREE.MeshStandardMaterial({
+  map: texture
+});
+
