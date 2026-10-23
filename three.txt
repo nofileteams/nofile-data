@@ -56,3 +56,14 @@ const material = new THREE.MeshStandardMaterial({
   map: texture
 });
 
+
+
+
+// 1. ターゲットとなるオブジェクト（例: メッシュ）を作成
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+
+// 2. カメラの向きをオブジェクトの位置に合わせる
+camera.lookAt(cube.position);
