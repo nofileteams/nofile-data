@@ -67,3 +67,30 @@ scene.add(cube);
 
 // 2. カメラの向きをオブジェクトの位置に合わせる
 camera.lookAt(cube.position);
+
+
+
+// 1. 事前に判定用のバウンディングボックスを作成
+const box1 = new THREE.Box3();
+const box2 = new THREE.Box3();
+
+// 2. アニメーションループ内で毎フレーム更新して判定
+function animate() {
+    requestAnimationFrame(animate);
+
+    // キューブの移動処理（例）
+    cube1.position.x += 0.01;
+
+    // オブジェクトの最新の位置・変形をバウンディングボックスに反映
+    box1.setFromObject(cube1);
+    box2.setFromObject(cube2);
+
+    // 衝突判定 ( intersectsBox を使う )
+    if (box1.intersectsBox(box2)) {
+        console.log("cube1がcube2に触れました！");
+        // ここに触れたときの処理（色を変えるなど）を書く
+    }
+
+    renderer.render(scene, camera);
+}
+animate();
