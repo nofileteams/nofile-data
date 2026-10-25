@@ -94,3 +94,17 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+
+
+// 1. ワールド座標を格納するためのVector3オブジェクトを作成
+const position1 = new THREE.Vector3();
+const position2 = new THREE.Vector3();
+
+// 2. オブジェクトの現在の世界座標を取得（グループ化やアニメーション対応）
+cube.getWorldPosition(position1);
+cube2.getWorldPosition(position2);
+
+// 3. 2点間の距離を計算
+const distance = position1.distanceTo(position2);
+
+console.log("オブジェクト間の距離:", distance);
