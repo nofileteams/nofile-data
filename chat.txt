@@ -63,6 +63,11 @@ body.liminal .role{color:var(--dim);text-shadow:none}
 .body pre{background:rgba(0,0,0,.35);padding:10px;overflow:auto;border-left:3px solid var(--c);white-space:pre}
 body.liminal .body pre{background:#cfc693}
 .body code{background:rgba(255,255,255,.08);padding:0 4px}
+.body b,.body em,.body .math,.body .katex{color:var(--c)}
+.body .math{font-family:"Courier New",monospace;border-bottom:1px dotted var(--c);padding:0 2px}
+.body .katex-display{overflow-x:auto;overflow-y:hidden;margin:.6em 0}
+body.liminal .body b,body.liminal .body em,body.liminal .body .math,body.liminal .body .katex{color:var(--text)}
+body.liminal .body b{font-weight:700}body.liminal .body em{text-decoration:underline}
 #empty{margin:auto;color:var(--dim);text-align:center;letter-spacing:.3em}
 #inputbar{padding:10px 14px;border-top:1px solid var(--c);display:flex;flex-direction:column;gap:6px}
 body.liminal #inputbar{border-color:var(--dim)}
@@ -152,8 +157,12 @@ input[type=color]{padding:0;height:38px}
   <div><label>検索判断用モデル (空欄=メインモデル)</label><input id="s-jm" list="models"></div>
   <div><label>検索の要否を判断中の表示テキスト</label><input id="s-jt"></div>
   <div class="two">
+    <div><label>AIが自動的に計算する</label><select id="s-calc"><option value="0">OFF</option><option value="1">ON</option></select></div>
+    <div><label>検索・計算結果をシステムプロンプトに影響する</label><select id="s-tsys"><option value="0">OFF (発言の直前に別メッセージ)</option><option value="1">ON (システムプロンプト末尾に追記)</option></select></div>
+  </div>
+  <div class="two">
     <div><label>回答を自動で読み上げる</label><select id="s-atts"><option value="0">OFF</option><option value="1">ON</option></select></div>
-    <div><label>音声エンジン (失敗時はブラウザ標準)</label><select id="s-te"><option value="browser">ブラウザ標準</option><option value="google">Google Cloud TTS</option><option value="puter">Puter.js</option><option value="eleven">ElevenLabs API</option><option value="speechify">Speechify API</option></select></div>
+    <div><label>音声エンジン (失敗時はブラウザ標準)</label><select id="s-te"><option value="browser">ブラウザ標準</option><option value="google">Google Cloud TTS</option><option value="puter">Puter.js</option><option value="eleven">ElevenLabs API</option><option value="speechify">Speechify API</option><option value="edge">Edge TTS (サーバー経由)</option><option value="sherpa">Sherpa-ONNX (サーバー経由)</option></select></div>
   </div>
   <div class="two">
     <div><label>ブラウザの声</label><select id="s-tv"></select></div>
@@ -186,6 +195,22 @@ input[type=color]{padding:0;height:38px}
     <div><label>Speechify Voice ID</label><input id="s-sv"></div>
   </div>
   <div><label>Speechify モデル</label><input id="s-sm"></div>
+  <div class="two">
+    <div><label>Edge TTS サーバーURL (OpenAI互換 /v1/audio/speech)</label><input id="s-edu"></div>
+    <div><label>Edge TTS APIキー</label><input id="s-edk" type="password" autocomplete="off"></div>
+  </div>
+  <div class="two">
+    <div><label>Edge TTS 声 (例 ja-JP-NanamiNeural / ja-JP-KeitaNeural)</label><input id="s-edv"></div>
+    <div><label>Edge TTS モデル (任意)</label><input id="s-edm"></div>
+  </div>
+  <div class="two">
+    <div><label>Sherpa-ONNX サーバーURL (OpenAI互換 /v1/audio/speech)</label><input id="s-spu"></div>
+    <div><label>Sherpa-ONNX APIキー (任意)</label><input id="s-spk" type="password" autocomplete="off"></div>
+  </div>
+  <div class="two">
+    <div><label>Sherpa-ONNX 声 / 話者 (任意)</label><input id="s-spv"></div>
+    <div><label>Sherpa-ONNX モデル (任意)</label><input id="s-spm"></div>
+  </div>
   <div><label>カスタム指示 (システムプロンプト)</label><textarea id="s-sys" rows="5"></textarea></div>
   <div style="display:flex;gap:8px;justify-content:flex-end"><button id="s-reset">初期化</button><button id="s-close">保存して閉じる</button></div>
   <div style="font-size:11px;color:var(--dim)">think は常に false で送信されます。</div>
@@ -195,7 +220,9 @@ input[type=color]{padding:0;height:38px}
 const $=s=>document.querySelector(s);
 const DEF={api:"http://localhost:11434",model:"liminal-space/dreamcore-ai:latest",title:"AAA",theme:"neon",color:"#ff1a1a",sys:"",userName:"YOU",aiName:"AI",bgMode:"default",bgColor:"#000000",bgImage:"",autoSearch:false,searchProvider:"wiki",wikiLang:"ja",ollamaKey:"",searchEndpoint:"",searchN:3,judgeModel:"",judgeText:"🔍 検索の要否を判断中…",
 autoTTS:false,ttsEngine:"browser",ttsVoice:"",ttsRate:1,ttsPitch:1,ttsLang:"ja-JP",gKey:"",gVoice:"ja-JP-Neural2-B",
-eKey:"",eVoice:"21m00Tcm4TlvDq8ikWAM",eModel:"eleven_multilingual_v2",sKey:"",sVoice:"geffen_32",sModel:"simba-3.2",pProvider:"aws-polly",pVoice:"Takumi",pModel:"",pInstr:"",searchKeys:{},googleCx:"",searxUrl:"",showLogo:true};
+eKey:"",eVoice:"21m00Tcm4TlvDq8ikWAM",eModel:"eleven_multilingual_v2",sKey:"",sVoice:"geffen_32",sModel:"simba-3.2",pProvider:"aws-polly",pVoice:"Takumi",pModel:"",pInstr:"",searchKeys:{},googleCx:"",searxUrl:"",showLogo:true,autoCalc:false,toolSys:false,
+edgeUrl:"http://localhost:5050/v1/audio/speech",edgeKey:"your_api_key_here",edgeVoice:"ja-JP-NanamiNeural",edgeModel:"tts-1",
+sherUrl:"http://localhost:8000/v1/audio/speech",sherKey:"",sherVoice:"",sherModel:""};
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 let cfg={...DEF,...load("oc_cfg",{})}, convs=load("oc_convs",[]), cur=null, atts=[], ctrl=null;
 
@@ -217,11 +244,35 @@ function applyCfg(){
   $("#title").textContent=cfg.title;$("#logo").hidden=!cfg.showLogo; $("#side-title").textContent=cfg.title; document.title=cfg.title;
 }
 const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+let katexState=0; // 0=未読込 1=読込中 2=完了 -1=失敗
+function loadKatex(){
+  if(katexState!==0)return;katexState=1;
+  const l=document.createElement("link");l.rel="stylesheet";l.href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css";document.head.appendChild(l);
+  const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js";
+  s.onload=()=>{katexState=2;if(!ctrl)renderChat()};s.onerror=()=>{katexState=-1};document.head.appendChild(s);
+}
+function renderMath(tex,disp){
+  tex=tex.trim();
+  if(window.katex){try{return katex.renderToString(tex,{displayMode:disp,throwOnError:false})}catch{}}
+  loadKatex(); // 読込前/失敗時は強調表示した生テキストで代用
+  return`<span class="math">${esc(tex)}</span>`;
+}
 function md(t){
-  let h=esc(t);
-  h=h.replace(/```(\w*)\n?([\s\S]*?)(```|$)/g,(_,l,c)=>`<pre>${c}</pre>`);
-  h=h.replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>");
-  return h;
+  const hold=[],keep=s=>`\u0000${hold.push(s)-1}\u0000`;
+  let h=t;
+  // コードは最優先で退避 (中身は整形しない)
+  h=h.replace(/```(\w*)\n?([\s\S]*?)(```|$)/g,(_,l,c)=>keep(`<pre>${esc(c)}</pre>`));
+  h=h.replace(/`([^`\n]+)`/g,(_,c)=>keep(`<code>${esc(c)}</code>`));
+  // 数式: $$..$$ \[..\] \(..\) $..$ ($5 と $10 のような金額は除外)
+  h=h.replace(/\$\$([\s\S]+?)\$\$/g,(_,x)=>keep(renderMath(x,true)))
+     .replace(/\\\[([\s\S]+?)\\\]/g,(_,x)=>keep(renderMath(x,true)))
+     .replace(/\\\(([\s\S]+?)\\\)/g,(_,x)=>keep(renderMath(x,false)))
+     .replace(/\$(?![\s$])([^$\n]+?)(?<!\s)\$(?!\d)/g,(_,x)=>keep(renderMath(x,false)));
+  h=esc(h);
+  h=h.replace(/^([ \t]*)[*+-][ \t]+/gm,"$1• ")                      // "*   テキスト" → 箇条書き
+     .replace(/\*\*(?!\s)([^*\n]+?)(?<!\s)\*\*/g,"<b>$1</b>")        // **強調**
+     .replace(/(^|[^*\w])\*(?![\s*])([^*\n]+?)(?<![\s*])\*(?![*\w])/g,"$1<em>$2</em>"); // *強調*
+  return h.replace(/\u0000(\d+)\u0000/g,(_,i)=>hold[i]);
 }
 const curConv=()=>convs.find(c=>c.id===cur);
 
@@ -237,12 +288,15 @@ function renderList(){
 }
 function msgEl(m){
   const d=document.createElement("div"); d.className="msg "+m.role;
-  let h=`<div class="role"><span>${esc(m.role==="user"?cfg.userName:cfg.aiName)}</span><span>${m.role==="assistant"?'<button class="cp sp" title="読み上げ">🔊</button> ':""}<button class="cp cc">コピー</button></span></div>`;
+  let h=`<div class="role"><span>${esc(m.role==="user"?cfg.userName:cfg.aiName)}</span><span>${m.role==="assistant"?'<button class="cp rg" title="回答をやり直す">↻</button> <button class="cp sp" title="読み上げ">🔊</button> ':""}<button class="cp cc">コピー</button></span></div>`;
   (m.images||[]).forEach(i=>h+=`<img src="${i}">`);
   (m.files||[]).forEach(f=>h+=`<span class="chip">📄 ${esc(f)}</span>`);
   if(m.sources){const s=m.sources;h+=`<div class="src">🔍 ${esc(s.query)}${s.error?` — 検索失敗: ${esc(s.error)}`:""} ${(s.items||[]).map(x=>/^https?:\/\//.test(x.url)?`<a href="${esc(x.url).replace(/"/g,"%22")}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`:"").join("")}</div>`}
+  if(m.calc)h+=`<div class="src">🧮 ${m.calc.map(c=>esc(c.expr)+(c.alg?" → ":" = ")+esc(c.result!==undefined?c.result:"エラー: "+c.error)).join(" ／ ")}</div>`;
   h+=`<div class="body">${md(m.shown??m.content)}</div>`;
   d.innerHTML=h;
+  const rg=d.querySelector(".rg");
+  if(rg)rg.onclick=()=>regen(m);
   const sp=d.querySelector(".sp");
   if(sp)sp.onclick=()=>{if(spkBtn===sp){stopSpeak();return}speak(m.content,sp)};
   const b=d.querySelector(".cc");
@@ -253,6 +307,17 @@ function msgEl(m){
     b.textContent="コピーしました";setTimeout(()=>b.textContent="コピー",1500);
   };
   return d;
+}
+function regen(m){ // この回答を消して、直前のユーザー発言から作り直す
+  if(ctrl)return;
+  const cv=curConv();if(!cv)return;
+  const i=cv.messages.indexOf(m);if(i<0)return;
+  let u=i-1;while(u>=0&&cv.messages[u].role!=="user")u--;
+  if(u<0)return;
+  if(i<cv.messages.length-1&&!confirm("この回答より後の会話は削除されます。やり直しますか？"))return;
+  stopSpeak();
+  cv.messages.length=u+1;
+  run(cv,cv.messages[u].shown??cv.messages[u].content);
 }
 function renderChat(){
   const c=$("#chat"); c.innerHTML="";
@@ -295,6 +360,10 @@ async function send(){
   tfs.forEach(f=>content+=`\n\n[添付ファイル: ${f.name}]\n\`\`\`\n${f.data}\n\`\`\``);
   cv.messages.push({role:"user",content,shown:text,images:imgs.length?imgs:undefined,files:tfs.map(f=>f.name)});
   $("#in").value="";$("#in").style.height="auto";atts=[];renderAtts();
+  return run(cv,text);
+}
+// 回答の生成本体 (送信・やり直しの両方から呼ぶ)
+async function run(cv,text){
   const ai={role:"assistant",content:""};
   cv.messages.push(ai); save(); renderList(); renderChat();
   const el=$("#chat").lastElementChild.querySelector(".body");
@@ -307,8 +376,10 @@ async function send(){
   });
   ctrl=new AbortController(); $("#send").textContent="停止"; stopSpeak(); let failed=0;
   try{
-    const extra=await webSearchFlow(text,el,ai,ctrl.signal); // 履歴には保存しない
-    if(extra)msgs.splice(msgs.length-1,0,{role:"system",content:extra}); // 最新のユーザー発言の直前にシステムとして挿入
+    const extra=[await webSearchFlow(text,el,ai,ctrl.signal),await calcFlow(text,el,ai,ctrl.signal)].filter(Boolean).join("\n\n"); // 履歴には保存しない
+    if(extra){
+      if(cfg.toolSys){if(msgs[0]?.role==="system")msgs[0].content+="\n\n"+extra;else msgs.unshift({role:"system",content:extra})} // システムプロンプトに追記
+      else msgs.splice(msgs.length-1,0,{role:"system",content:extra});} // 最新のユーザー発言の直前にシステムとして挿入
     const res=await fetch(cfg.api.replace(/\/$/,"")+"/api/chat",{method:"POST",signal:ctrl.signal,
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:cfg.model,messages:msgs,stream:true,think:false})});
@@ -410,7 +481,7 @@ $("#wsb").onclick=()=>{forceSearch=!forceSearch;$("#wsb").classList.toggle("on",
 let spkId=0,spkBtn=null,curAudio=null;
 function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",4000)}
 function stopSpeak(){spkId++;speechSynthesis.cancel();if(curAudio){curAudio.pause();curAudio=null}if(spkBtn){spkBtn.textContent="🔊";spkBtn=null}}
-const cleanTTS=t=>t.replace(/```[\s\S]*?(```|$)/g,"（コード省略）").replace(/`([^`]*)`/g,"$1").replace(/\*\*|__/g,"").replace(/^#+\s*/gm,"").replace(/https?:\/\/\S+/g,"").replace(/\n{2,}/g,"\n").trim();
+const cleanTTS=t=>t.replace(/```[\s\S]*?(```|$)/g,"（コード省略）").replace(/`([^`]*)`/g,"$1").replace(/^[ \t]*[*+-][ \t]+/gm,"").replace(/\*+|__/g,"").replace(/^#+\s*/gm,"").replace(/https?:\/\/\S+/g,"").replace(/\n{2,}/g,"\n").trim();
 function chunks(t,max){
   const out=[];let cur="";
   for(const s of t.split(/(?<=[。．！？!?\n])/)){
@@ -491,7 +562,20 @@ function puterLists(p,reset){
   if(reset){$("#s-pm").value=x.m[0]||"";$("#s-pv").value=x.v[0]||""} // プロバイダ変更時は既定値に
 }
 $("#s-pp").onchange=e=>puterLists(e.target.value,true);
-const ENG={google:googleChunk,eleven:elevenChunk,speechify:speechifyChunk,puter:puterChunk};
+// OpenAI互換 /v1/audio/speech を提供するローカルサーバー用 (Edge TTS, Sherpa-ONNX 等)
+async function oaiChunk(url,key,model,voice,t,fmt){
+  if(!url)throw new Error("サーバーURL未設定");
+  const h={"Content-Type":"application/json"};if(key)h.Authorization="Bearer "+key;
+  const b={input:t,speed:Math.min(4,Math.max(.25,cfg.ttsRate))};
+  if(model)b.model=model;if(voice)b.voice=voice;if(fmt)b.response_format=fmt;
+  const r=await fetch(url,{method:"POST",headers:h,body:JSON.stringify(b)});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const blob=await r.blob();if(!blob.size)throw new Error("音声データなし");
+  return URL.createObjectURL(blob);
+}
+const edgeChunk=t=>oaiChunk(cfg.edgeUrl,cfg.edgeKey,cfg.edgeModel||"tts-1",cfg.edgeVoice||"ja-JP-NanamiNeural",t,"mp3");
+const sherpaChunk=t=>oaiChunk(cfg.sherUrl,cfg.sherKey,cfg.sherModel,cfg.sherVoice,t,"");
+const ENG={google:googleChunk,eleven:elevenChunk,speechify:speechifyChunk,puter:puterChunk,edge:edgeChunk,sherpa:sherpaChunk};
 const playUrl=(url,id)=>new Promise((res,rej)=>{
   if(id!==spkId)return res();
   const a=typeof url==="string"?new Audio(url):url;curAudio=a;a.onended=res;a.onerror=()=>rej(new Error("再生失敗"));a.play().catch(rej);
@@ -524,6 +608,177 @@ function fillVoices(sel){
   $("#s-tv").value=sel;
 }
 
+// calculator
+const CALC_JUDGE=`You decide whether the user's message asks for a concrete arithmetic/mathematical calculation that should be computed exactly with a calculator (e.g. "2+2*3", "√144", "15% of 3200", "12345*6789").
+Also treat as "algebra": simplifying / combining like terms / expanding expressions that contain variables (e.g. "8x-7y+9x+2y="), or solving equations (e.g. "2x+3=7", "x^2-5x+6=0").
+NOT needed ("none"): chit-chat, explanations of math concepts, proofs, programming questions, or anything without a concrete expression to compute.
+Reply ONLY with JSON: {"mode":"calc" (purely numeric arithmetic) or "algebra" or "none"}`;
+const ALG_EXPR=`Convert the algebraic expression or equation in the user's message into plain ASCII math text.
+Rules: use only single-letter variables (a-z), numbers, + - * / ( ) and ** for powers. Write multiplication explicitly with * (e.g. "8*x"). Convert full-width characters and symbols (✖️ × ÷ ＋ ２ ｘ) to ASCII. Keep the "=" and the right side only if it is a real equation (e.g. "2x+3=7"); if the user only wants the expression simplified (e.g. a trailing "="), drop the "=". No text, units or explanations.
+Example: "8x-7y+9x+2y=を解いて" => {"exprs":["8*x-7*y+9*x+2*y"]}
+Example: "2x+3=7を解いて" => {"exprs":["2*x+3=7"]}
+Reply ONLY with JSON: {"exprs":["..."]}`;
+const CALC_EXPR=`Convert the calculation(s) in the user's message into JavaScript-style math expressions using ONLY numbers, + - * / % ** ( ) and these functions: sqrt, cbrt, abs, sin, cos, tan, asin, acos, atan, log (natural), log10, log2, exp, floor, ceil, round, pow, min, max, and the constants pi and e.
+Use * for multiplication, / for division, ** for power. Convert full-width characters and symbols (✖️ × ÷ ＋ ２) to ASCII. Percent: "15% of 3200" => "0.15*3200". No units, variables, text or equals sign. If several separate calculations are asked, output each as a separate item (max 5).
+Example: "2+２+2✖️3-0を計算して" => {"exprs":["2+2+2*3-0"]}
+Reply ONLY with JSON: {"exprs":["..."]}`;
+async function llmJSON(system,text,sig){
+  const r=await fetch(cfg.api.replace(/\/$/,"")+"/api/chat",{method:"POST",signal:sig,headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:cfg.judgeModel||cfg.model,stream:false,think:false,format:"json",options:{temperature:0},
+      messages:[{role:"system",content:system},{role:"user",content:text}]})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return JSON.parse((await r.json()).message.content); // 履歴には入れない
+}
+function calcEval(src){ // evalは使わず、安全な再帰下降パーサーで計算
+  let s=src.normalize("NFKC").replace(/✖\uFE0F?|✕|×|⋅|·/g,"*").replace(/÷/g,"/").replace(/[−–—]/g,"-")
+    .replace(/(?<=\d),(?=\d{3})/g,"").replace(/\s+/g,"").replace(/\^/g,"**").replace(/√\(/g,"sqrt(").replace(/√(\d+\.?\d*)/g,"sqrt($1)");
+  let i=0;
+  const F={sqrt:Math.sqrt,cbrt:Math.cbrt,abs:Math.abs,sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,
+    log:Math.log,ln:Math.log,log10:Math.log10,log2:Math.log2,exp:Math.exp,floor:Math.floor,ceil:Math.ceil,round:Math.round,pow:Math.pow,min:Math.min,max:Math.max};
+  const C={pi:Math.PI,e:Math.E},err=m=>{throw new Error(m)};
+  function expr(){let v=term();while(s[i]==="+"||s[i]==="-"){const o=s[i++],r=term();v=o==="+"?v+r:v-r}return v}
+  function term(){let v=unary();for(;;){const c=s[i];
+    if(c==="*"&&s[i+1]!=="*"){i++;v*=unary()}else if(c==="/"){i++;v/=unary()}else if(c==="%"){i++;v%=unary()}else break}return v}
+  function unary(){if(s[i]==="-"){i++;return-unary()}if(s[i]==="+"){i++;return unary()}return power()}
+  function power(){const b=atom();if(s[i]==="*"&&s[i+1]==="*"){i+=2;return b**unary()}return b}
+  function atom(){
+    if(s[i]==="("){i++;const v=expr();if(s[i++]!==")")err("括弧が閉じていません");return v}
+    let m=/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i));
+    if(m){i+=m[0].length;return parseFloat(m[0])}
+    m=/^[a-z_][a-z0-9_]*/i.exec(s.slice(i));
+    if(m){
+      const id=m[0].toLowerCase();i+=m[0].length;
+      if(s[i]==="("){
+        i++;const a=[];
+        if(s[i]!==")"){do{a.push(expr())}while(s[i]===","&&++i)}
+        if(s[i++]!==")")err("括弧が閉じていません");
+        if(!Object.hasOwn(F,id))err("未対応の関数: "+id);
+        return F[id](...a);
+      }
+      if(Object.hasOwn(C,id))return C[id];
+      err("未対応の記号: "+m[0]);
+    }
+    err("式を解釈できません: "+(s[i]??"末尾"));
+  }
+  const v=expr();
+  if(i<s.length)err("式を解釈できません: "+s[i]);
+  if(typeof v!=="number"||!isFinite(v))err("計算結果が不正です(0除算など)");
+  return v;
+}
+const fmtNum=x=>String(+x.toPrecision(15)); // 0.1+0.2 → 0.3
+// ---- 代数: 多項式を展開して同類項をまとめる / 1変数の1次・2次方程式を解く ----
+// 単項式は「文字を並べて整列した文字列」をキーにする (x^2y → "xxy", 定数 → "")
+const normExpr=src=>src.normalize("NFKC").replace(/✖\uFE0F?|✕|×|⋅|·/g,"*").replace(/÷/g,"/").replace(/[−–—]/g,"-")
+  .replace(/(?<=\d),(?=\d{3})/g,"").replace(/\s+/g,"").replace(/\^/g,"**");
+const pclean=r=>{for(const k in r)if(Math.abs(r[k])<1e-12)delete r[k];return r};
+const PADD=(a,b,s=1)=>{const r={...a};for(const k in b)r[k]=(r[k]||0)+s*b[k];return pclean(r)};
+const PMUL=(a,b)=>{const r={};for(const x in a)for(const y in b){const k=[...(x+y)].sort().join("");r[k]=(r[k]||0)+a[x]*b[y]}return pclean(r)};
+const PCONST=p=>{const ks=Object.keys(p);return ks.length===0?0:(ks.length===1&&ks[0]===""?p[""]:null)}; // 定数でなければnull
+const keyStr=k=>{const c={};for(const ch of k)c[ch]=(c[ch]||0)+1;return Object.keys(c).sort().map(ch=>ch+(c[ch]>1?"^"+c[ch]:"")).join("")};
+function fmtPoly(p){
+  const ks=Object.keys(p).sort((a,b)=>b.length-a.length||(a<b?-1:1));
+  if(!ks.length)return"0";
+  return ks.map((k,j)=>{const c=p[k],a=Math.abs(c),body=k?(a===1?"":fmtNum(a))+keyStr(k):fmtNum(a);
+    return(j===0?(c<0?"-":""):(c<0?" - ":" + "))+body}).join("");
+}
+function fmtFrac(x){
+  if(Number.isInteger(+x.toPrecision(12)))return fmtNum(x);
+  for(let q=2;q<=1000;q++){const p=Math.round(x*q);if(Math.abs(x-p/q)<1e-9)return`${p}/${q} (≈${fmtNum(x)})`}
+  return fmtNum(x);
+}
+function algEval(src){
+  const s=normExpr(src),err=m=>{throw new Error(m)};
+  let i=0,depth=0;const contrib={};
+  const num=n=>pclean({"":n}),FN=/^(sqrt|cbrt|abs|sin|cos|tan|asin|acos|atan|log10|log2|log|ln|exp|floor|ceil|round|pow|min|max)(?=\()/i;
+  const rec=(top,t,sg)=>{if(top)for(const k in t)(contrib[k]??=[]).push(sg*t[k])}; // 最上位の項ごとの係数を記録
+  function expr(){
+    const top=depth++===0;let t=term();rec(top,t,1);let v=t;
+    while(s[i]==="+"||s[i]==="-"){const sg=s[i++]==="+"?1:-1;t=term();rec(top,t,sg);v=PADD(v,t,sg)}
+    depth--;return v;
+  }
+  function term(){
+    let v=unary();
+    for(;;){const c=s[i];
+      if(c==="*"&&s[i+1]!=="*"){i++;v=PMUL(v,unary())}
+      else if(c==="/"){i++;const d=PCONST(unary());if(!d)err("0または変数での割り算には未対応");v=PMUL(v,num(1/d))}
+      else if(c&&/[a-z(]/i.test(c)){v=PMUL(v,power())} // 暗黙の掛け算: 8x, 2(x+1), (x+1)(x-1)
+      else break}
+    return v;
+  }
+  function unary(){if(s[i]==="-"){i++;return PMUL(unary(),num(-1))}if(s[i]==="+"){i++;return unary()}return power()}
+  function power(){
+    const b=atom();
+    if(s[i]==="*"&&s[i+1]==="*"){
+      i+=2;const e=PCONST(unary());if(e===null)err("指数に変数は未対応");
+      const bc=PCONST(b);if(bc!==null)return num(Math.pow(bc,e));
+      if(!Number.isInteger(e)||e<0||e>8)err("変数を含む式の指数は0〜8の整数のみ対応");
+      let r=num(1);for(let j=0;j<e;j++)r=PMUL(r,b);return r;
+    }
+    return b;
+  }
+  function atom(){
+    if(s[i]==="("){i++;const v=expr();if(s[i++]!==")")err("括弧が閉じていません");return v}
+    let m=/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i));
+    if(m){i+=m[0].length;return num(parseFloat(m[0]))}
+    m=FN.exec(s.slice(i));
+    if(m){
+      const f=m[1].toLowerCase();i+=m[0].length+1;const a=[];
+      if(s[i]!==")"){do{const c=PCONST(expr());if(c===null)err("関数の引数に変数は未対応");a.push(c)}while(s[i]===","&&++i)}
+      if(s[i++]!==")")err("括弧が閉じていません");
+      return num(Math[f==="ln"?"log":f](...a));
+    }
+    m=/^[a-z]/i.exec(s.slice(i));
+    if(m){i++;return{[m[0].toLowerCase()]:1}}
+    err("式を解釈できません: "+(s[i]??"末尾"));
+  }
+  const p=expr();
+  if(i<s.length)err("式を解釈できません: "+s[i]);
+  return{p,contrib};
+}
+function algSolve(src){
+  const parts=src.normalize("NFKC").split("=").map(x=>x.trim());
+  if(parts.length>2)throw new Error("「=」が複数あります");
+  const A=algEval(parts[0]||"0"),eq=parts.length===2&&parts[1]!=="";
+  const nt=(...a)=>a.filter(Boolean).join(" / ");
+  // 同類項の計算の途中経過 (例: xの係数: 8 + 9 = 17)
+  const steps=Object.entries(A.contrib).filter(([,v])=>v.length>1).map(([k,v])=>
+    `${k?keyStr(k)+"の係数":"定数項"}: ${v.map((n,j)=>j?(n<0?` + (${fmtNum(n)})`:` + ${fmtNum(n)}`):fmtNum(n)).join("")} = ${fmtNum(v.reduce((a,b)=>a+b,0))}`).join(" / ");
+  if(!eq)return{result:fmtPoly(A.p),note:steps};
+  const B=algEval(parts[1]),D=PADD(A.p,B.p,-1);
+  const vars=[...new Set(Object.keys(D).join("").split(""))].filter(Boolean);
+  if(!vars.length)return{result:Object.keys(D).length===0?"恒等的に成立 (常に真)":`成立しない (偽): ${fmtPoly(A.p)} ≠ ${fmtPoly(B.p)}`,note:""};
+  if(vars.length>1)return{result:`整理: ${fmtPoly(D)} = 0 (変数が複数のため解は求めません)`,note:steps};
+  const v=vars[0],c0=D[""]||0,c1=D[v]||0,c2=D[v+v]||0,deg=Math.max(...Object.keys(D).map(k=>k.length));
+  if(deg===1)return{result:`${v} = ${fmtFrac(-c0/c1)}`,note:nt(steps,`移項して ${fmtPoly(D)} = 0`)};
+  if(deg===2){
+    const d=c1*c1-4*c2*c0,note=nt(steps,`整理して ${fmtPoly(D)} = 0, 判別式 D = ${fmtNum(d)}`);
+    if(d<0)return{result:`実数解なし (複素数解: ${v} = ${fmtNum(-c1/(2*c2))} ± ${fmtNum(Math.sqrt(-d)/Math.abs(2*c2))}i)`,note};
+    const r1=(-c1+Math.sqrt(d))/(2*c2),r2=(-c1-Math.sqrt(d))/(2*c2);
+    return{result:Math.abs(d)<1e-12?`${v} = ${fmtFrac(r1)} (重解)`:`${v} = ${fmtFrac(r1)}, ${v} = ${fmtFrac(r2)}`,note};
+  }
+  return{result:`整理: ${fmtPoly(D)} = 0 (3次以上の方程式は未対応)`,note:steps};
+}
+async function calcFlow(text,el,ai,sig){
+  if(!cfg.autoCalc||!text)return"";
+  try{
+    el.textContent="🧮 計算の要否を判断中…";
+    const mode=(await llmJSON(CALC_JUDGE,text,sig)).mode;
+    if(mode!=="calc"&&mode!=="algebra")return"";
+    el.textContent="🧮 式を作成中…";
+    const ex=(await llmJSON(mode==="algebra"?ALG_EXPR:CALC_EXPR,text,sig)).exprs;
+    const list=(Array.isArray(ex)?ex:[ex]).filter(x=>typeof x==="string"&&x.trim()).slice(0,5);
+    if(!list.length)return"";
+    el.textContent="🧮 計算中…";
+    ai.calc=list.map(x=>{try{
+      if(mode==="algebra"){const a=algSolve(x);return{expr:x,result:a.result,note:a.note,alg:1}}
+      return{expr:x,result:fmtNum(calcEval(x))};
+    }catch(e){return{expr:x,error:e.message}}});
+  }catch(e){if(e.name==="AbortError")throw e;return""}
+  const ok=ai.calc.filter(c=>c.result!==undefined);
+  if(!ok.length)return"";
+  return"以下は、あなた自身が電卓(JavaScript)で正確に計算・整理した結果です(代数式は同類項をまとめて整理済み)。ユーザーが提示した資料ではありません。「ご提示の計算結果」のような言い方は避け、この値を信頼してそのまま回答に使ってください(自分で再計算して別の値にしないこと)。\n"+ok.map(c=>`${c.expr}${c.alg?"  →  ":" = "}${c.result}`+(c.note?`\n  (途中計算: ${c.note})`:"")).join("\n");
+}
+
 // events
 $("#send").onclick=send;
 $("#in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}});
@@ -554,14 +809,16 @@ $("#s-bgf").onchange=e=>{
 };
 async function openSet(){
   $("#s-api").value=cfg.api;$("#s-model").value=cfg.model;$("#s-title").value=cfg.title;
-  $("#s-theme").value=cfg.theme;$("#s-logo").value=cfg.showLogo?"1":"0";$("#s-color").value=cfg.color;$("#s-sys").value=cfg.sys;
+  $("#s-theme").value=cfg.theme;$("#s-logo").value=cfg.showLogo?"1":"0";$("#s-calc").value=cfg.autoCalc?"1":"0";$("#s-tsys").value=cfg.toolSys?"1":"0";$("#s-color").value=cfg.color;$("#s-sys").value=cfg.sys;
   $("#s-auto").value=cfg.autoSearch?"1":"0";$("#s-sp").value=cfg.searchProvider;$("#s-wl").value=cfg.wikiLang;
   $("#s-sn").value=cfg.searchN;
   tmpKeys={...(cfg.searchKeys||{})};prevSP=cfg.searchProvider;$("#s-xk").value=tmpKeys[prevSP]||"";$("#s-cx").value=cfg.googleCx;$("#s-sx").value=cfg.searxUrl;$("#s-ok").value=cfg.ollamaKey;$("#s-se").value=cfg.searchEndpoint;$("#s-jm").value=cfg.judgeModel;$("#s-jt").value=cfg.judgeText;
   $("#s-atts").value=cfg.autoTTS?"1":"0";$("#s-te").value=cfg.ttsEngine;$("#s-tl").value=cfg.ttsLang;
   $("#s-tr").value=cfg.ttsRate;$("#s-tp").value=cfg.ttsPitch;$("#s-gk").value=cfg.gKey;$("#s-gv").value=cfg.gVoice;
   $("#s-pp").value=cfg.pProvider;$("#s-pv").value=cfg.pVoice;$("#s-ek").value=cfg.eKey;$("#s-ev").value=cfg.eVoice;
-  $("#s-em").value=cfg.eModel;$("#s-pm").value=cfg.pModel;$("#s-pi").value=cfg.pInstr;puterLists(cfg.pProvider,false);$("#s-sk").value=cfg.sKey;$("#s-sv").value=cfg.sVoice;$("#s-sm").value=cfg.sModel;
+  $("#s-em").value=cfg.eModel;$("#s-pm").value=cfg.pModel;$("#s-pi").value=cfg.pInstr;puterLists(cfg.pProvider,false);
+  $("#s-edu").value=cfg.edgeUrl;$("#s-edk").value=cfg.edgeKey;$("#s-edv").value=cfg.edgeVoice;$("#s-edm").value=cfg.edgeModel;
+  $("#s-spu").value=cfg.sherUrl;$("#s-spk").value=cfg.sherKey;$("#s-spv").value=cfg.sherVoice;$("#s-spm").value=cfg.sherModel;$("#s-sk").value=cfg.sKey;$("#s-sv").value=cfg.sVoice;$("#s-sm").value=cfg.sModel;
   fillVoices(cfg.ttsVoice);speechSynthesis.onvoiceschanged=()=>fillVoices($("#s-tv").value||cfg.ttsVoice);
   $("#s-un").value=cfg.userName;$("#s-an").value=cfg.aiName;
   $("#s-bg").value=cfg.bgMode;$("#s-bgc").value=cfg.bgColor;tmpBg=cfg.bgImage;
@@ -572,7 +829,7 @@ async function openSet(){
 function closeSet(){
   tmpKeys[prevSP]=$("#s-xk").value.trim();
   cfg={api:$("#s-api").value.trim()||DEF.api,model:$("#s-model").value.trim()||DEF.model,title:$("#s-title").value||DEF.title,
-    theme:$("#s-theme").value,showLogo:$("#s-logo").value==="1",color:$("#s-color").value,sys:$("#s-sys").value,
+    theme:$("#s-theme").value,showLogo:$("#s-logo").value==="1",autoCalc:$("#s-calc").value==="1",toolSys:$("#s-tsys").value==="1",color:$("#s-color").value,sys:$("#s-sys").value,
     userName:$("#s-un").value.trim()||DEF.userName,aiName:$("#s-an").value.trim()||DEF.aiName,
     autoSearch:$("#s-auto").value==="1",searchProvider:$("#s-sp").value,wikiLang:$("#s-wl").value.trim()||"ja",
     searchN:Math.min(8,Math.max(1,+$("#s-sn").value||3)),ollamaKey:$("#s-ok").value.trim(),
@@ -581,7 +838,9 @@ function closeSet(){
     ttsRate:Math.min(2,Math.max(.5,+$("#s-tr").value||1)),ttsPitch:Math.min(2,Math.max(0,+$("#s-tp").value||1)),
     gKey:$("#s-gk").value.trim(),gVoice:$("#s-gv").value.trim(),
     pProvider:$("#s-pp").value,pVoice:$("#s-pv").value.trim(),eKey:$("#s-ek").value.trim(),eVoice:$("#s-ev").value.trim(),
-    eModel:$("#s-em").value.trim(),pModel:$("#s-pm").value.trim(),pInstr:$("#s-pi").value.trim(),sKey:$("#s-sk").value.trim(),sVoice:$("#s-sv").value.trim(),sModel:$("#s-sm").value.trim(),
+    eModel:$("#s-em").value.trim(),pModel:$("#s-pm").value.trim(),pInstr:$("#s-pi").value.trim(),
+    edgeUrl:$("#s-edu").value.trim(),edgeKey:$("#s-edk").value.trim(),edgeVoice:$("#s-edv").value.trim(),edgeModel:$("#s-edm").value.trim(),
+    sherUrl:$("#s-spu").value.trim(),sherKey:$("#s-spk").value.trim(),sherVoice:$("#s-spv").value.trim(),sherModel:$("#s-spm").value.trim(),sKey:$("#s-sk").value.trim(),sVoice:$("#s-sv").value.trim(),sModel:$("#s-sm").value.trim(),
     bgMode:$("#s-bg").value,bgColor:$("#s-bgc").value,bgImage:tmpBg};
   saveCfg();applyCfg();if(!ctrl)renderChat();$("#modal").classList.remove("show");
 }
