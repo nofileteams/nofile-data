@@ -1,5 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.160.0';
-
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 const canvasElement = document.querySelector('#canvas');
 
@@ -23,15 +24,17 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 
 const geometry = new THREE.BoxGeometry(2, 2, 2); 
-const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.1 }); 
-const cube = new THREE.Mesh(geometry, material); 
+const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }); 
+const cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })); 
 const cube2 = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 12), new THREE.MeshBasicMaterial({ color: 'gray' })); 
 scene.add(cube);
 scene.add(cube2);
 cube2.position.y = -3;
 
+new OBJLoader().load("black-shard.obj", (obj) => cube.add(obj));
+
 //cube.transparent = true;
-//cube.opacity = 0.5;
+cube.material.opacity = 0;
 
 //cube.castShadow = true;
 //cube2.castShadow = true;
