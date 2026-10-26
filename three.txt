@@ -108,3 +108,13 @@ cube2.getWorldPosition(position2);
 const distance = position1.distanceTo(position2);
 
 console.log("オブジェクト間の距離:", distance);
+
+
+
+    const clip = THREE.AnimationClip.findByName(gltf.animations, 'animation.entity.idle');
+
+    if (clip) {
+        // 4. アクションを生成して再生
+        const action = mixer.clipAction(clip);
+        action.play();
+    } 
