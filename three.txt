@@ -1,8 +1,11 @@
 import * as THREE from 'https://esm.sh/three@0.160.0';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 const canvasElement = document.querySelector('#canvas');
 
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x404040);
 
 const camera = new THREE.PerspectiveCamera(
   75, 
@@ -10,7 +13,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1, 
   1000
 );
-camera.position.z = 5; 
+camera.position.z = 6; 
 
 const renderer = new THREE.WebGLRenderer({
   canvas: canvasElement,
@@ -18,17 +21,47 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio); 
+renderer.shadowMap.enabled = true;
 
 const geometry = new THREE.BoxGeometry(2, 2, 2); 
-const material = new THREE.MeshNormalMaterial(); 
-const cube = new THREE.Mesh(geometry, material); 
+const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }); 
+const cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })); 
+const cube2 = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 12), new THREE.MeshBasicMaterial({ color: 'gray' })); 
 scene.add(cube);
+scene.add(cube2);
+cube2.position.y = -3;
+
+
+//cube.transparent = true;
+cube.material.opacity = 0.5;
+
+//let black_shard = "";
+//new THREE.OBJLoader().load("black-shard.obj", (obj) => {});
+const cube3 = await new OBJLoader().loadAsync('black-shard.obj');
+cube3.traverse((c) => { c.material = new THREE.MeshStandardMaterial(); });
+cube3.rotation.x = 45;
+scene.add(cube3)
+//cube.castShadow = true;
+//cube2.castShadow = true;
+//cube.receiveShadow = true;
+//cube2.receiveShadow = true;
+console.log("aaa");
+
+
+//light.castShadow = true;
+
 
 function animate() {
   requestAnimationFrame(animate);
 
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
+  cube.rotation.z += 0.01;
+  cube.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI / 180);
+
+  cube.translateZ(0.01);
+  cube3.translateX(0.1);
+  cube3.position.y += 0.01;
 
   renderer.render(scene, camera);
 }
@@ -40,81 +73,3 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-
-
-
-// 1. テクスチャローダーの作成
-const loader = new THREE.TextureLoader();
-
-// 2. 画像の読み込みとカラースペースの指定（sRGBを推奨）
-const texture = loader.load('path/to/image.jpg');
-texture.colorSpace = THREE.SRGBColorSpace;
-
-// 3. マテリアルに適用
-const material = new THREE.MeshStandardMaterial({
-  map: texture
-});
-
-
-
-
-// 1. ターゲットとなるオブジェクト（例: メッシュ）を作成
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-
-// 2. カメラの向きをオブジェクトの位置に合わせる
-camera.lookAt(cube.position);
-
-
-
-// 1. 事前に判定用のバウンディングボックスを作成
-const box1 = new THREE.Box3();
-const box2 = new THREE.Box3();
-
-// 2. アニメーションループ内で毎フレーム更新して判定
-function animate() {
-    requestAnimationFrame(animate);
-
-    // キューブの移動処理（例）
-    cube1.position.x += 0.01;
-
-    // オブジェクトの最新の位置・変形をバウンディングボックスに反映
-    box1.setFromObject(cube1);
-    box2.setFromObject(cube2);
-
-    // 衝突判定 ( intersectsBox を使う )
-    if (box1.intersectsBox(box2)) {
-        console.log("cube1がcube2に触れました！");
-        // ここに触れたときの処理（色を変えるなど）を書く
-    }
-
-    renderer.render(scene, camera);
-}
-animate();
-
-
-// 1. ワールド座標を格納するためのVector3オブジェクトを作成
-const position1 = new THREE.Vector3();
-const position2 = new THREE.Vector3();
-
-// 2. オブジェクトの現在の世界座標を取得（グループ化やアニメーション対応）
-cube.getWorldPosition(position1);
-cube2.getWorldPosition(position2);
-
-// 3. 2点間の距離を計算
-const distance = position1.distanceTo(position2);
-
-console.log("オブジェクト間の距離:", distance);
-
-
-
-    const clip = THREE.AnimationClip.findByName(gltf.animations, 'animation.entity.idle');
-
-    if (clip) {
-        // 4. アクションを生成して再生
-        const action = mixer.clipAction(clip);
-        action.play();
-    } 
