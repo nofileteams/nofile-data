@@ -1,6 +1,8 @@
 import * as THREE from 'https://esm.sh/three@0.160.0';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { Water } from 'https://esm.sh/three@0.160.0/examples/jsm/objects/Water.js';
+console.log("bbb");
 
 const canvasElement = document.querySelector('#canvas');
 
@@ -28,8 +30,25 @@ const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }
 const cube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })); 
 const cube2 = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 12), new THREE.MeshBasicMaterial({ color: 'gray' })); 
 scene.add(cube);
-scene.add(cube2);
+//scene.add(cube2);
 cube2.position.y = -3;
+
+
+
+const water = new Water(new THREE.PlaneGeometry(100, 100), {
+  textureWidth: 512,
+  textureHeight: 512,
+  waterNormals: new THREE.TextureLoader().load(
+    'https://threejs.org/examples/textures/waternormals.jpg',
+    (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  ),
+  sunDirection: new THREE.Vector3(1, 1, 1).normalize(),
+  sunColor: 0xffffff,
+  waterColor: 0x001e0f,
+  distortionScale: 3,
+});
+water.rotation.x = -Math.PI / 2;
+scene.add(water);
 
 
 //cube.transparent = true;
@@ -49,15 +68,23 @@ console.log("aaa");
 
 
 //light.castShadow = true;
+water.position.y = -1
 
 
-function animate() {
+
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5, 8, 5);
+scene.add(light, new THREE.AmbientLight(0x6688aa, 1));
+
+function animate(ms) {
   requestAnimationFrame(animate);
-
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
   cube.rotation.z += 0.01;
   cube.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI / 180);
+
+
+  water.material.uniforms['time'].value += 1 / 60;
 
   cube.translateZ(0.01);
   cube3.translateX(0.1);
