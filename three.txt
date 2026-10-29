@@ -33,7 +33,7 @@ scene.add(cube);
 //scene.add(cube2);
 cube2.position.y = -3;
 
-
+console.log("ss")
 
 const water = new Water(new THREE.PlaneGeometry(100, 100), {
   textureWidth: 512,
@@ -43,8 +43,8 @@ const water = new Water(new THREE.PlaneGeometry(100, 100), {
     (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
   ),
   sunDirection: new THREE.Vector3(1, 1, 1).normalize(),
-  sunColor: 0xffffff,
-  waterColor: 0x001e0f,
+  sunColor: "white",
+  waterColor: "white",
   distortionScale: 3,
 });
 water.rotation.x = -Math.PI / 2;
