@@ -1,0 +1,198 @@
+import * as THREE from 'https://esm.sh/three@0.160.0';
+
+let key_a = false;
+let key_d = false;
+let key_w = false;
+let key_s = false;
+document.addEventListener("keydown", (event) => {
+  if (event.key === "w") {
+    key_w = true;
+  };
+  if (event.key === "a") {
+    key_a = true;
+  };
+  if (event.key === "s") {
+    key_s = true;
+  };
+  if (event.key === "d") {
+    key_d = true;
+  };
+});
+document.addEventListener("keyup", (event) => {
+  if (event.key === "w") {
+    key_w = false;
+  };
+  if (event.key === "a") {
+    key_a = false;
+  };
+  if (event.key === "s") {
+    key_s = false;
+  };
+  if (event.key === "d") {
+    key_d = false;
+  };
+});
+
+
+const canvas_3d = document.querySelector("#canvas");
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const scene = new THREE.Scene();
+const renderer = new THREE.WebGLRenderer({ antialis: true, canvas: canvas_3d });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+camera.position.z = 18;
+camera.position.y = 2;
+camera.lookAt(0, 0, 0);
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+const player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial());
+scene.add(player);
+
+const enemy = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "red" }));
+scene.add(enemy);
+
+const enemy2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "pink" }));
+scene.add(enemy2);
+
+const enemy3 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "cyan" }));
+scene.add(enemy3);
+
+const enemy4 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "orange" }));
+scene.add(enemy4);
+
+const stage = new THREE.Mesh(new THREE.BoxGeometry(30, 1, 1), new THREE.MeshBasicMaterial({ color: "white", transparent: true, opacity: 0.5 }));
+stage.position.y = -7;
+scene.add(stage);
+
+const stage2 = new THREE.Mesh(new THREE.BoxGeometry(30, 1, 1), new THREE.MeshBasicMaterial({ color: "white", transparent: true, opacity: 0.5 }));
+stage2.position.y = 7;
+scene.add(stage2);
+
+
+const wall = new THREE.Mesh(new THREE.BoxGeometry(1, 15, 1), new THREE.MeshBasicMaterial({ color: "white", transparent: true, opacity: 0.5 }));
+wall.position.x = -15.5;
+scene.add(wall);
+
+const wall2 = new THREE.Mesh(new THREE.BoxGeometry(1, 15, 1), new THREE.MeshBasicMaterial({ color: "white", transparent: true, opacity: 0.5 }));
+wall2.position.x = 15.5;
+scene.add(wall2);
+
+player.position.x = -13;
+
+const hit1 = new THREE.Box3();
+const hit2 = new THREE.Box3();
+
+hit1.setFromObject(player);
+
+let prev = player.position.clone();
+let prev2 = player.position.clone();
+let prev3 = player.position.clone();
+
+function loop() {
+  requestAnimationFrame(loop);
+  if (key_a === true) {
+    player.position.x -= 0.1;
+  };
+  if (key_d === true) {
+    player.position.x += 0.1;
+  };
+  hit1.setFromObject(player);
+  hit2.setFromObject(stage);
+  player.position.y -= 0.1;
+  if (key_w === true) {
+    player.position.y += 0.2;
+  };
+  if (hit1.intersectsBox(hit2)) {
+    player.position.y += 0.1;
+  };
+
+  hit1.setFromObject(player);
+  hit2.setFromObject(wall);
+  if (hit1.intersectsBox(hit2)) {
+    player.position.copy(prev);
+  } else {
+    prev.copy(player.position);
+  };
+
+  hit1.setFromObject(player);
+  hit2.setFromObject(stage2);
+  if (hit1.intersectsBox(hit2)) {
+    player.position.copy(prev2);
+  } else {
+    prev2.copy(player.position);
+  };
+
+  hit1.setFromObject(player);
+  hit2.setFromObject(wall2);
+  if (hit1.intersectsBox(hit2)) {
+    player.position.copy(prev3);
+  } else {
+    prev3.copy(player.position);
+  };
+
+  enemy.lookAt(player.position);
+  enemy.translateZ(0.09);
+  enemy.rotation.x = 0;
+  enemy.rotation.y = 0;
+  enemy.rotation.z = 0;
+
+  enemy2.lookAt(player.position);
+  enemy2.translateZ(0.08);
+  enemy2.rotation.x = 0;
+  enemy2.rotation.y = 0;
+  enemy2.rotation.z = 0;
+
+  enemy3.lookAt(player.position);
+  enemy3.translateZ(0.07);
+  enemy3.rotation.x = 0;
+  enemy3.rotation.y = 0;
+  enemy3.rotation.z = 0;
+
+  enemy4.lookAt(player.position);
+  enemy4.translateZ(0.06);
+  enemy4.rotation.x = 0;
+  enemy4.rotation.y = 0;
+  enemy4.rotation.z = 0;
+
+  hit1.setFromObject(player);
+  hit2.setFromObject(enemy);
+  if (hit1.intersectsBox(hit2)) {
+    enemy.position.x = 0;
+    enemy.position.y = 0;
+    enemy.position.z = 0;
+    enemy2.position.x = 0;
+    enemy2.position.y = 0;
+    enemy2.position.z = 0;
+    enemy3.position.x = 0;
+    enemy3.position.y = 0;
+    enemy3.position.z = 0;
+    enemy4.position.x = 0;
+    enemy4.position.y = 0;
+    enemy4.position.z = 0;
+    
+    player.position.x = -13;
+    player.position.y = 0;
+    player.position.z = 0;
+  };
+
+  renderer.render(scene, camera);
+};
+
+loop();
+
+
+
+
+
+
+
+
+
