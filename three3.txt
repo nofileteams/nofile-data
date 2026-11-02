@@ -96,6 +96,8 @@ let prev = player.position.clone();
 let prev2 = player.position.clone();
 let prev3 = player.position.clone();
 
+
+
 function loop() {
   requestAnimationFrame(loop);
   if (key_a === true) {
@@ -144,19 +146,21 @@ function loop() {
   enemy.rotation.y = 0;
   enemy.rotation.z = 0;
 
-  enemy2.lookAt(player.position);
+  enemy2.lookAt(enemy.position);
   enemy2.translateZ(0.08);
   enemy2.rotation.x = 0;
   enemy2.rotation.y = 0;
   enemy2.rotation.z = 0;
 
   enemy3.lookAt(player.position);
+  enemy3.rotation.y -= Math.floor((Math.random() * 0.5) + -0.5);
   enemy3.translateZ(0.07);
   enemy3.rotation.x = 0;
   enemy3.rotation.y = 0;
   enemy3.rotation.z = 0;
 
   enemy4.lookAt(player.position);
+  enemy4.rotation.y += Math.floor((Math.random() * 0.5) + -0.5);
   enemy4.translateZ(0.06);
   enemy4.rotation.x = 0;
   enemy4.rotation.y = 0;
@@ -165,16 +169,16 @@ function loop() {
   hit1.setFromObject(player);
   hit2.setFromObject(enemy);
   if (hit1.intersectsBox(hit2)) {
-    enemy.position.x = 0;
+    enemy.position.x = 12;
     enemy.position.y = 0;
     enemy.position.z = 0;
-    enemy2.position.x = 0;
+    enemy2.position.x = 12;
     enemy2.position.y = 0;
     enemy2.position.z = 0;
-    enemy3.position.x = 0;
+    enemy3.position.x = 6;
     enemy3.position.y = 0;
     enemy3.position.z = 0;
-    enemy4.position.x = 0;
+    enemy4.position.x = 6;
     enemy4.position.y = 0;
     enemy4.position.z = 0;
     
