@@ -1,2 +1,2 @@
-#best ai model
-sorc/qwen3.5-uncensored:2b 
+#僕がいつも使用してるAIです↓
+Agen/gemma-4-26B-A4B-it-uncensored-heretic:latest
