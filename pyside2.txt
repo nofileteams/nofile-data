@@ -1,15 +1,146 @@
-from PySide6.QtGui import QPixmap, QTransform
-from PySide6.QtCore import Qt
+import sys
+from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot, QPoint
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QTransform
 
-# 1. 元の画像を読み込む
-pixmap = QPixmap("image.png")
 
-# 2. 変形（回転）を管理するQTransformオブジェクトを作成
-transform = QTransform()
+class test(QFrame):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self.point = QPoint()
+	def mousePressEvent(self, event):
+		if event.button() == Qt.MouseButton.LeftButton:
+			self.point = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+	def mouseMoveEvent(self, event):
+		if event.buttons() == Qt.MouseButton.LeftButton:
+			self.move(event.globalPosition().toPoint() - self.point)
 
-# 3. 回転角度を指定（例: 時計回りに 45 度）
-angle = 45
-transform.rotate(angle)
 
-# 4. 画像を回転させる（画質を保つために高品質のフィルタリングを適用）
-rotated_pixmap = pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
+class Windows(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.setWindowTitle("test")
+		self.resize(1000, 700)
+		self.setFixedSize(self.size())
+		self.setStyleSheet("background-color: black;")
+		self.box = test(self)
+		self.box.setStyleSheet("background-color: red;")
+
+
+app = QApplication(sys.argv)
+main = Windows()
+main.show()
+sys.exit(app.exec())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import sys
+from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QTransform
+
+class Windows(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.setWindowTitle("test")
+		self.setWindowIcon(QIcon("icon.ico"))
+		self.resize(1000, 700)
+		self.setFixedSize(self.size())
+		#QUrl.fromLocalFile(html_path)
+		self.setStyleSheet("background-color: black;")
+		
+		
+		self.transform = QTransform().rotate(45)
+		self.image2 = QPixmap("hayato807.png")
+		self.image2 = self.image2.transformed(self.transform)
+		self.image1 = QPixmap(self.image2.size())
+		self.image1.fill(Qt.transparent)
+		self.paint = QPainter(self.image1)
+		self.paint.setOpacity(0.5)
+		self.paint.drawPixmap(0, 0, self.image2)
+		self.paint.end()
+		self.label = QLabel(self)
+		self.label.setPixmap(self.image1)
+
+
+app = QApplication()
+main = Windows()
+main.show()
+sys.exit(app.exec())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import sys
+from PySide6.QtCore import Qt, QUrl, QTimer, QObject, Slot, QPoint
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QTextEdit, QPushButton, QFrame, QVBoxLayout, QMainWindow, QScrollArea
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QTransform
+
+class windows(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.setWindowTitle("Youtube")
+		self.resize(1000, 700)
+		self.web = QWebEngineView(self)
+		self.web.setGeometry(self.rect())
+		self.web.setUrl(QUrl("https://youtube.com"))
+		
+		self.fullscreen = False
+		
+		self.timer = QTimer(self)
+		self.timer.timeout.connect(lambda: self.web.setGeometry(self.rect()))
+		self.timer.start(10)
+	def keyPressEvent(self, event):
+		if event.key() == Qt.Key_F11:
+			if self.fullscreen == False:
+				self.showFullScreen()
+				self.fullscreen = True
+			else:
+				self.showNormal()
+				#self.showMaximized()
+				self.fullscreen = False
+		
+
+
+app = QApplication(sys.argv)
+main = windows()
+main.show()
+sys.exit(app.exec())
