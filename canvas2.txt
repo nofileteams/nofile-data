@@ -35,3 +35,64 @@ function touch(img, x, y, w, h, img2, x2, y2, w2, h2) {
     };
     return false
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+const ctx = canvas.getContext('2d');
+
+// 移動したい画像(座標は中心基準。touch() の仕様に合わせています)
+const img = new Image();
+img.src = 'your-image.png';
+const obj = { x: 240, y: 180, w: 100, h: 100, r: 0 };
+
+// マウス位置判定用の 1x1 の不透明な点
+const point = document.createElement('canvas');
+point.width = point.height = 1;
+const p = point.getContext('2d');
+p.fillRect(0, 0, 1, 1);
+
+let dragging = false;
+let offset_x = 0, offset_y = 0;
+
+canvas.addEventListener('mousedown', () => {
+	// マウスが画像の不透明部分に乗っているか
+	if (touch(img, obj.x, obj.y, obj.w, obj.h, obj.r,
+	          point, mouse_x, mouse_y, 1, 1, 0)) {
+		dragging = true;
+		// つかんだ位置と画像中心のズレを記録(画像がジャンプしないように)
+		offset_x = obj.x - mouse_x;
+		offset_y = obj.y - mouse_y;
+	}
+});
+
+// canvas外で離しても止まるよう window で受ける
+window.addEventListener('mouseup', () => {
+	dragging = false;
+});
+
+function loop() {
+	if (dragging) {
+		obj.x = mouse_x + offset_x;
+		obj.y = mouse_y + offset_y;
+	}
+
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.save();
+	ctx.translate(obj.x, obj.y);
+	ctx.rotate(obj.r * Math.PI / 180);
+	ctx.drawImage(img, -obj.w / 2, -obj.h / 2, obj.w, obj.h);
+	ctx.restore();
+
+	requestAnimationFrame(loop);
+}
+loop();
