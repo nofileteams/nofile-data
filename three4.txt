@@ -1,0 +1,307 @@
+//Beta
+
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { Water } from 'https://esm.sh/three@0.160.0/examples/jsm/objects/Water.js';
+
+if (navigator.userAgent.includes("Windows") === false) {
+	window.location = "/you.html";
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let key_down = false;
+let key_left = false;
+let key_right = false;
+let key_up = false;
+let key_w = false;
+let key_a = false;
+let key_s = false;
+let key_d = false;
+
+
+function sendmessage(event) {
+	clone.forEach(c => {
+		c.receivemessage(event);
+	});
+}
+
+window.addEventListener("keydown", (event) => {
+	if (event.key === "ArrowUp") {
+		key_up = true;
+	};
+	if (event.key === "ArrowDown") {
+		key_down = true;
+	};
+	if (event.key === "ArrowLeft") {
+		key_left = true;
+	};
+	if (event.key === "ArrowRight") {
+		key_right = true;
+	};
+	if (event.key === "w") {
+		key_w = true;
+	};
+	if (event.key === "a") {
+		key_a = true;
+	};
+	if (event.key === "s") {
+		key_s = true;
+	};
+	if (event.key === "d") {
+		key_d = true;
+	};
+});
+
+window.addEventListener("keyup", (event) => {
+	if (event.key === "ArrowUp") {
+		key_up = false;
+	};
+	if (event.key === "ArrowDown") {
+		key_down = false;
+	};
+	if (event.key === "ArrowLeft") {
+		key_left = false;
+	};
+	if (event.key === "ArrowRight") {
+		key_right = false;
+	};
+	if (event.key === "w") {
+		key_w = false;
+	};
+	if (event.key === "a") {
+		key_a = false;
+	};
+	if (event.key === "s") {
+		key_s = false;
+	};
+	if (event.key === "d") {
+		key_d = false;
+	};
+});
+
+let clone = [];
+const canvas_3d = document.querySelector("#canvas");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color("cyan");
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas_3d });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+renderer.shadowMap.enabled = true;
+
+const texture_grass = new THREE.TextureLoader().load("src/grass.png", (t) => {t.wrapS = t.wrapT = THREE.RepeatWrapping});
+texture_grass.repeat.set(30, 30);
+const floor = new THREE.Mesh(new THREE.BoxGeometry(300, 1, 300), new THREE.MeshBasicMaterial({
+	map: texture_grass,
+}));
+
+floor.position.y = -3;
+
+
+const player = new THREE.Mesh(new THREE.BoxGeometry(1, 3, 1), new THREE.MeshBasicMaterial({
+	
+}));
+
+player.position.y = 1;
+
+const wall = await new OBJLoader().loadAsync("src/wall.obj");
+wall.traverse((c) => { c.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("src/wall.png") }) });
+
+const spawn = await new OBJLoader().loadAsync("src/spawn.obj");
+spawn.traverse((c) => { c.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("src/spawn.png"), transparent: true, opacity: 1 }) });
+spawn.scale.x = 5;
+spawn.scale.y = 5;
+spawn.scale.z = 5;
+spawn.position.y = -2.5;
+//player.position.z = -7;
+
+const hitbox = new THREE.Mesh(new THREE.BoxGeometry(15, 1, 15), new THREE.MeshBasicMaterial({
+	
+}));
+hitbox.position.y = -2;
+
+const hit1 = new THREE.Box3();
+const hit2 = new THREE.Box3();
+
+let player_prev = player.position.clone();
+let player_prev2 = player.position.clone();
+
+
+wall.scale.y = 30;
+wall.scale.x = 150;
+wall.scale.z = 150;
+wall.position.y = -3;
+
+scene.add(floor);
+scene.add(player);
+scene.add(wall);
+scene.add(spawn);
+
+
+floor.receiveShadow = true;
+spawn.castShadow = true;
+spawn.receiveShadow = true;
+floor.castShadow = true;
+
+//scene.add(hitbox);
+
+const rotate_speed = 0.03;
+
+
+let is_hitbox = false;
+
+class spawn_3d {
+	constructor() {
+		this.layer = 0;
+		this.pitch = 0;
+		this.yaw = 0;
+		
+		this.mode = false;
+	};
+	async receivemessage(event) {
+		this.event = event;
+		if (this.event === "fade_spawn") {
+			for (let i = 0; i < 10; i++) {
+				spawn.traverse((c) => { c.material.opacity -= 0.1; });
+				await sleep(30);
+			};
+			scene.remove(spawn);
+			spawn.traverse((c) => { c.material.dispose(); });
+			hitbox.material.dispose();
+			is_hitbox = true;
+		};
+	};
+	update() {
+		this.a = new THREE.Vector3();
+		this.b = new THREE.Vector3();
+		spawn.getWorldPosition(this.a);
+		player.getWorldPosition(this.b);
+		if (this.a.distanceTo(this.b) >= 30) {
+			if (this.mode === false) {
+				this.mode = true;
+				sendmessage("fade_spawn");
+			};
+		};
+	};
+};
+
+
+
+
+
+
+
+class player_3d {
+	constructor() {
+		this.layer = 0;
+		this.pitch = 0;
+		this.yaw = 0;
+	};
+	receivemessage(event) {
+		this.event = event;
+	};
+	update() {
+		player.position.y -= 0.1;
+		hit1.setFromObject(player);
+		hit2.setFromObject(floor);
+		if (hit1.intersectsBox(hit2)) {
+			const player_next = player.position.clone();
+			player.position.x = player_prev.x;
+			player.position.z = player_prev.z;
+			hit1.setFromObject(player);
+			if (hit1.intersectsBox(hit2)) {
+				player.position.copy(player_next);
+				player.position.y = player_prev.y;
+				hit1.setFromObject(player);
+				if (hit1.intersectsBox(hit2)) {
+					player.position.copy(player_prev);
+				};
+			};
+			player_prev.copy(player.position);
+		} else {
+			player_prev.copy(player.position);
+		};
+
+
+		if (is_hitbox === false) {
+			hit1.setFromObject(player);
+			hit2.setFromObject(hitbox);
+			if (hit1.intersectsBox(hit2)) {
+				const player_next2 = player.position.clone();
+				player.position.x = player_prev2.x;
+				player.position.z = player_prev2.z;
+				hit1.setFromObject(player);
+				if (hit1.intersectsBox(hit2)) {
+					player.position.copy(player_next2);
+					player.position.y = player_prev2.y;
+					hit1.setFromObject(player);
+					if (hit1.intersectsBox(hit2)) {
+						player.position.copy(player_prev2);
+					};
+				};
+				player_prev2.copy(player.position);
+			} else {
+				player_prev2.copy(player.position);
+			};
+		};
+
+
+
+
+		
+		if (key_down === true) {
+			this.pitch -= rotate_speed;
+		};
+		if (key_up === true) {
+			this.pitch += rotate_speed;
+		};
+		if (key_right === true) {
+			this.yaw -= rotate_speed;
+			player.rotation.y -= rotate_speed;
+		};
+		if (key_left === true) {
+			this.yaw += rotate_speed;
+			player.rotation.y += rotate_speed;
+		};
+
+		if (key_w === true) {
+			player.translateZ(-0.1);
+		};
+		if (key_a === true) {
+			player.translateX(-0.1);
+		};
+		if (key_s === true) {
+			player.translateZ(0.1);
+		};
+		if (key_d === true) {
+			player.translateX(0.1);
+		};
+		this.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.pitch));
+		camera.rotation.y = this.yaw;
+		camera.rotation.x = this.pitch;
+		camera.position.y = player.position.y + 0.5;
+		camera.position.x = player.position.x;
+		camera.position.z = player.position.z;
+	};
+};
+
+
+
+camera.rotation.order = "YXZ";
+
+function loop() {
+	clone = clone.filter(c => !c.destroy);
+	clone.sort((a, b) => a.layer - b.layer);
+	clone.forEach(c => {
+		c.update();
+	});
+	renderer.render(scene, camera);
+	requestAnimationFrame(loop);
+};
+clone.push(new player_3d());
+clone.push(new spawn_3d());
+loop();
