@@ -4,3 +4,24 @@ import java.util.Comparator;
 try (var paths = Files.walk(Path.of("target/folder"))) {
     paths.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
 }
+
+
+
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class CreateFolderExample {
+    public static void main(String[] args) {
+        // 親フォルダもまとめて作成する例
+        Path dirPath = Path.of("output/sub/folder");
+
+        try {
+            Files.createDirectories(dirPath);
+            System.out.println("フォルダを作成しました");
+        } catch (IOException e) {
+            System.err.println("作成に失敗しました: " + e.getMessage());
+        }
+    }
+}
