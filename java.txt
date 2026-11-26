@@ -25,3 +25,140 @@ public class CreateFolderExample {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===== import: 他のパッケージのクラスを使うための宣言(JSのimportに近い) =====
+import java.util.ArrayList;   // 大きさが変わる配列。JSの配列[]に一番近い
+import java.util.Comparator;  // 並び替えのルール(比較方法)を表すインターフェース
+import java.util.List;        // リストの型(インターフェース)。ArrayListはこの実装の一つ
+
+// ===== GameObject: 全ゲームオブジェクトの共通の親クラス =====
+// abstract = 「抽象クラス」。これ自体はnewできず、継承して使う前提の未完成クラス
+// 後でAaa, Apple, Bbbなど大量にクラスを増やしても、全部これを継承すれば同じList<GameObject>に入る
+abstract class GameObject {
+	int id;            // 識別用の番号(フィールド=クラスが持つ変数)
+	int layer;         // 描画順。小さいほど先に処理される
+	boolean destroy;   // trueなら次のループで削除される
+	String event;      // 最後に受け取ったメッセージを保存する
+
+	// コンストラクタ: newされたときに最初に1回だけ呼ばれる。戻り値の型は書かない
+	GameObject(int id, int layer) {
+		this.id = id;          // this.id = フィールドのid、右辺のid = 引数のid
+		this.layer = layer;    // 同上
+		this.destroy = false;  // 最初は削除しない
+	}
+
+	// abstractメソッド: 中身({}の部分)を書かず宣言だけする
+	// 継承したクラスは必ずこれらを実装しないとコンパイルエラーになる(=書き忘れ防止)
+	abstract void anime();                      // アニメーション用の処理
+	abstract void receivemessage(String event); // メッセージを受け取る処理
+	abstract void update();                     // 毎フレームの更新処理
+	abstract void draw();                       // 毎フレームの描画処理
+}
+
+// ===== Test: GameObjectを継承した具体的なクラス =====
+// extends = 「GameObjectの子クラスになる」。親のフィールドやメソッドを引き継ぐ
+class Test extends GameObject {
+	String aaa;  // Test独自のフィールド(親にはない)
+
+	// Testのコンストラクタ
+	Test(int id, int layer, String aaa) {
+		super(id, layer);   // 親(GameObject)のコンストラクタを呼ぶ。必ず1行目に書く
+		this.aaa = aaa;     // 独自フィールドに代入
+		System.out.println("this.aaa");  // 画面に出力。JSのconsole.logに相当(中身は文字列そのまま)
+		this.anime();       // 自分のanime()を呼ぶ
+	}
+
+	// @Override = 「親のメソッドを上書き(実装)しています」という印
+	// 付けておくと、名前や引数を間違えたときにコンパイルエラーで教えてくれる
+	@Override
+	void anime() {
+		// 今は何もしない(JSの async anime() {} と同じ)
+	}
+
+	@Override
+	void receivemessage(String event) {
+		this.event = event;  // 受け取ったメッセージをフィールドに保存
+	}
+
+	@Override
+	void update() {
+		// 今は何もしない
+	}
+
+	@Override
+	void draw() {
+		// 今は何もしない
+	}
+}
+
+// ===== Main: プログラムの入口があるクラス =====
+// public class名とファイル名(Main.java)は一致させる必要がある
+public class Main {
+	// static = インスタンス(new)を作らなくても使える、クラス全体で1つだけの変数
+	// List<GameObject> = GameObjectとその子クラス(Testなど)を全部入れられるリスト
+	// new ArrayList<>() = 空のリストを作る(<>の中は左辺から自動で決まる)
+	static List<GameObject> clone = new ArrayList<>();
+
+	// 全オブジェクトにメッセージを送る。例: sendmessage("こんにちは");
+	static void sendmessage(String event) {
+		// c -> ... は「ラムダ式」。JSの c => ... とほぼ同じ意味
+		// リストの要素を1つずつ取り出してcに入れ、receivemessageを呼ぶ
+		clone.forEach(c -> c.receivemessage(event));
+	}
+
+	// メインループ。throws InterruptedException = Thread.sleepが途中で中断されたときの例外を呼び出し元に任せる
+	static void loop() throws InterruptedException {
+		while (true) {  // 無限ループ(JSのrequestAnimationFrameで永遠に繰り返すのと同じ)
+			// removeIf: 条件がtrue(destroyがtrue)の要素をリストから削除する
+			clone.removeIf(c -> c.destroy);
+
+			// sort: 並び替え。layerが小さい順(JSの a.layer - b.layer と同じ)
+			// comparingInt = intの値(layer)を基準にした比較ルールを作る
+			clone.sort(Comparator.comparingInt(c -> c.layer));
+
+			// 全オブジェクトを1つずつ処理する(ブロック{}の中に複数行書ける)
+			clone.forEach(c -> {
+				c.update();  // 更新
+				c.draw();    // 描画
+			});
+
+			// 16ミリ秒止まる(約60FPS)。requestAnimationFrameの代わり
+			Thread.sleep(16);
+		}
+	}
+
+	// main: Javaの実行はここから始まる(入口)
+	// String[] args = 起動時のコマンドライン引数(今回は未使用)
+	public static void main(String[] args) throws InterruptedException {
+		// 開始: Testを作ってリストに追加(add = JSのpush)
+		// 引数は id=1, layer=100, aaa="aaa"
+		clone.add(new Test(1, 100, "aaa"));
+		clone.add(new Test(1, 100, "bbb"));
+		loop();  // ループ開始(ここから先は終わらない)
+	}
+}
